@@ -22,7 +22,9 @@ exports.onConnection= function (clientSocket) {
     clientSocket.on('ballUpdate', function (data) {
         ballUpdate(clientSocket,data);
     });
-
+    clientSocket.on('paddleUpdate', function (data) {
+        paddleUpdate(clientSocket,data);
+    });
 }
 
 function createGame(clientSocket,data) {
@@ -65,6 +67,20 @@ function ballUpdate(clientSocket,data) {
         for(var player=0;player<currentGame.clients.length;player++) {
             if(player!=playerid) {
                 clientSocket.emit("ballUpdate",data);
+            }
+        }
+    }
+}
+
+function paddleUpdate(clientSocket,data) {
+    console.log("Paddle Update: " + util.inspect(data));
+    var gameId=data.gameid;
+    var playerid=data.playerid;
+    var currentGame=games[gameId];
+    if(currentGame) {
+        for(var player=0;player<currentGame.clients.length;player++) {
+            if(player!=playerid) {
+                clientSocket.emit("paddleUpdate",data);
             }
         }
     }
