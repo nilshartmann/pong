@@ -5,10 +5,10 @@
 
 var express = require('express');
 var routes = require('./routes');
-var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
 var socketio = require('socket.io');
+var game=require('./game.js');
 
 var app = express();
 
@@ -30,7 +30,6 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/users', user.list);
 
 var server=http.createServer(app).listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));
@@ -38,8 +37,9 @@ var server=http.createServer(app).listen(app.get('port'), function(){
 
 var io = socketio.listen(server)
 io.sockets.on('connection', function (socket) {
-    socket.emit('news', { hello: 'world' });
-    socket.on('my other event', function (data) {
-        console.log(data);
+    socket.on('createGame', function (data) {
+        var result=game.createGame(data);
+        socket.emit("ackCreateGame",result);
     });
 });
+
