@@ -41,7 +41,7 @@ function createGame(clientSocket,data,createGameCallback) {
     var game= {
         gameId: nextGame++,
         players: [player],
-        ball: undefined
+        ball: data.ball
     };
 
     var servergame = {

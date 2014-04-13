@@ -2,31 +2,7 @@
  * Created by markusklink on 13.04.14.
  */
 
-/**
- * Location of the game server
- * @type {*|io.Socket}
- */
-var gameServer1 = io.connect('http://localhost:3000');
-var gameServer2 = io.connect('http://localhost:3000');
 
-/**
- * Configuration object.
- */
-var gameCfg1 = createGameConfig();
-var clientCfg1 = createClientConfig();
-var callbackFunctions1 = callbackFunctions(gameCfg1)
-
-var gameCfg2 = createGameConfig();
-var clientCfg2 = createClientConfig();
-var callbackFunctions2 = callbackFunctions(gameCfg2)
-
-
-var setConfig = function (config, data) {
-    config.gameId = data.gameId;
-    config.playerId = data.playerId;
-    config.gameTime = data.gameTime;
-    config.players=data.game.players;
-};
 
 function callbackFunctions(gameCfg) {
     return {
@@ -63,7 +39,8 @@ function callbackFunctions(gameCfg) {
         playerJoined: function (data) {
             console.log("playerJoined");
             console.log(data);
-            console.log("TODO");
+            gameCfg.players=data.game.players;
+            gameCfg.ball = data.game.ball;
             // TODO gametime
             gameCfg = data.game;
         }
@@ -84,7 +61,7 @@ var createGame = function (gameServer,config, cb, cb2) {
         pos: 0,
         gameTime: config.gameTime
     };
-    gameServer.emit("createGame", {"gameTime": config.gameTime, paddle: config.players[0].paddle}, function (data) {
+    gameServer.emit("createGame", {"gameTime": config.gameTime, paddle: config.players[0].paddle, ball: config.ball}, function (data) {
         cb.ackCreateGame(data);
         cb2();
     });
@@ -140,26 +117,4 @@ var paddleUpdate = function (gameServer,config) {
         player: config.players[config.playerId]
     });
 };
-
-registerCallbacks(gameServer1, gameCfg1, callbackFunctions1);
-registerCallbacks(gameServer2, gameCfg2, callbackFunctions2);
-
-createGame(gameServer1,gameCfg1, callbackFunctions1, function () {
-    gameCfg2.gameId = gameCfg1.gameId;
-    ping(gameServer2,clientCfg2);
-    ping(gameServer2,clientCfg2);
-    ping(gameServer2,clientCfg2, function (latency) {
-        joinGame(gameServer2,gameCfg2, callbackFunctions2, function () {
-            gameCfg2.ball.x = 1;
-            gameCfg2.ball.y = 1;
-
-            ballUpdate(gameServer2,gameCfg2);
-
-            paddleUpdate(gameServer2,gameCfg2);
-        });
-    });
-
-
-});
-
 
