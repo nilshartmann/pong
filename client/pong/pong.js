@@ -8,7 +8,7 @@ var pong = pong || {};
 // ------------------------------------------------------------------------------------------------------
 (function (_extends, SimpleLogic, GameObject, context) {
 
-	function Brick(x, y, w,h, color) {
+	function Brick(x, y, w, h, color) {
 		var config = {
 			position: {
 				x: x,
@@ -65,7 +65,7 @@ var pong = pong || {};
 (function (_extends, _mixin, canvas, GameObject, MovingObject, Ball) {
 	"use strict";
 
-	function MovingBall(x,y) {
+	function MovingBall(x, y) {
 		this.velocity = {
 			x: 10,
 			y: 100
@@ -100,13 +100,13 @@ var pong = pong || {};
 	};
 
 	MovingBall.prototype.bounceOnEdges = function () {
-		if (this.position.x < this.r ) {
+		if (this.position.x < this.r) {
 			this.position.x = io.canvas.width - this.r;
 		}
 		if (this.position.x > io.canvas.width - this.r) {
 			this.position.x = this.r;
 		}
-		if (this.position.y  < this.r + 20) {
+		if (this.position.y < this.r + 20) {
 			this.position.y = 20 + this.r;
 			this.velocity.y = -this.velocity.y;
 		}
@@ -118,7 +118,7 @@ var pong = pong || {};
 
 	pong.MovingBall = MovingBall;
 
-}(util._extends,util._mixin,io.canvas,game.GameObject,game.MovingObject,game.Ball));
+}(util._extends, util._mixin, io.canvas, game.GameObject, game.MovingObject, game.Ball));
 
 // ------------------------------------------------------------------------------------------------------
 // ----- P L A Y E R W A L L
@@ -126,14 +126,14 @@ var pong = pong || {};
 (function (_extends, _mixins, context, canvas, MovingObject, Brick) {
 	"use strict";
 
-	function PlayerWall(ball, x,y,w,h, color, simulate) {
-		Brick.call(this, x, y, w, h,  'white');
+	function PlayerWall(ball, x, y, w, h, color, simulate) {
+		Brick.call(this, x, y, w, h, 'white');
 		this.stepSize = 5;
 		this.simulate = simulate;
 		this.points = 10;
 		this.ball = ball;
 
-		this.paddle = new Brick(x,(io.canvas.height-20)/2,20,80, color);
+		this.paddle = new Brick(x, (io.canvas.height - 20) / 2, 20, 80, color);
 
 		if (this.simulate) {
 			this.direction = 'down';
@@ -142,11 +142,11 @@ var pong = pong || {};
 
 	_extends(PlayerWall, Brick);
 
-	PlayerWall.prototype.points = function() {
+	PlayerWall.prototype.points = function () {
 		return this.points();
 	};
 
-	PlayerWall.prototype.draw = function() {
+	PlayerWall.prototype.draw = function () {
 		//Brick.prototype.draw.call(this);
 		// Nur den "Paddle" zeichnen
 
@@ -155,44 +155,24 @@ var pong = pong || {};
 		io.context.fillStyle = 'black';
 		io.context.font = '12px sans-serif';
 		var x = (this.config.position.x === 0 ? 0 : 500);
-		io.context.fillText("Punkte: " + this.points, x, io.canvas.height - 20);
+		io.context.fillText("Punkte: " + this.points, x, io.canvas.height - 40);
 	};
 
-	PlayerWall.prototype.bounceOnPaddleCollision = function() {
+	PlayerWall.prototype.bounceOnPaddleCollision = function () {
 
 		var ball = this.ball;
 		var pos = this.paddle.config.position;
 
-		if (this.paddle.config.color === 'blue') {
-			console.log('BOUNCE ON BLUE vel:' + ball.velocity.x);
-
-			if (ball.velocity.x > 0) {
-				// Ball kommt von links "wieder herein" => durchlassen
-				console.log(" WIEDER REIN VON LINKS");
-				return;
-			}
-
-			if (ball.position.x-ball.r < pos.x + this.paddle.width) {
-				ball.velocity.x = -ball.velocity.x;
-				ball.position.x = pos.x + this.paddle.width + ball.r;
-			}
-
-		} else {
-			console.log("BOUNCE ON GRAY vel:" + ball.velocity.x + " ball.x: " + ball.position.x + ", r: " + ball.r + ", pos.x: " + pos.x);
-
-			if (ball.velocity.x < 0) {
-				// Ball kommt von rechts "wieder herein" => durchlassen
-				console.log(" WIEDER REIN VON RECHTS");
-				return;
-			}
-
-			if (ball.position.x + ball.r > pos.x) {
-				ball.position.x = pos.x - ball.r;
-				ball.velocity.x = -ball.velocity.x;
-				return;
-			}
+		if (ball.velocity.x < 0 && ball.position.x - ball.r < pos.x + this.paddle.width) {
+			ball.velocity.x = -ball.velocity.x;
+			ball.position.x = pos.x + this.paddle.width + ball.r;
 		}
-		//
+
+		if (ball.velocity.x > 0 && ball.position.x + ball.r > pos.x) {
+			ball.position.x = pos.x - ball.r;
+			ball.velocity.x = -ball.velocity.x;
+			return;
+		}
 
 		if (ball.x + ball.r >= pos.x) {
 			ball.x = pos.x - ball.r;
@@ -217,14 +197,11 @@ var pong = pong || {};
 		}
 
 		if (this.collidesWith(this.ball)) {
-
 			if (!this.inWall) {
 				this.points--;
 			}
 
 			this.inWall = true;
-
-
 		} else {
 			this.inWall = false;
 		}
@@ -249,7 +226,6 @@ var pong = pong || {};
 			pos.y = canvas.height - 100;
 		}
 	};
-
 
 
 	// Export PlayerWall
