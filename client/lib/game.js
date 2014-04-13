@@ -9,7 +9,7 @@ var game = game || {};
         GameObject.call(config);
         this.position = config.position;
         this.r = config.r;
-        this.color = config.color;
+        this.color = config.color ;
     }
 
     util._extends(Ball, GameObject);
