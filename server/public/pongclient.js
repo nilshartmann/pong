@@ -72,6 +72,11 @@ function createCallbackFunctions(clientCfg) {
             console.log("paddleUpdate");
             console.log(data);
             clientCfg.game.players[data.player.playerId].paddle = data.player.paddle;
+			if (clientCfg.callbacks.onPaddleUpdate) {
+				clientCfg.callbacks.onPaddleUpdate();
+			}
+
+
         },
         playerJoined: function (data) {
             console.log("playerJoined");

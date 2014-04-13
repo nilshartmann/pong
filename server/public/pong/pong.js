@@ -126,18 +126,41 @@ var pong = pong || {};
 (function (_extends, _mixins, context, canvas, MovingObject, Brick) {
 	"use strict";
 
-	function PlayerWall(ball, x, y, w, h, color, simulate) {
+	function PlayerWall(left, pongGame, ball, x, y, w, h, color, simulate) {
 		Brick.call(this, x, y, w, h, 'white');
 		this.stepSize = 5;
 		this.simulate = simulate;
 		this.points = 10;
+		this.pongGame = pongGame;
 		this.ball = ball;
+		this.left = left;
 
 		this.paddle = new Brick(x, (io.canvas.height - 20) / 2, 20, 80, color);
 
 		if (this.simulate) {
 			this.direction = 'down';
 		}
+
+		var that = this;
+		var thisPongGame = this.pongGame;
+		console.log("thisponggame:");
+		console.dir(thisPongGame);
+		this.playerId = this.pongGame.clientConfig.game.playerId;
+		this.master = this.playerId === 0;
+
+		this.pongGame.clientConfig.callbacks.onPaddleUpdate = function() {
+			console.log("ON PADDLE UPDATE ");
+			console.dir( thisPongGame.clientConfig);
+
+			thisPongGame.clientConfig.game.players.forEach(function(p) {
+				if (p.playerId !== that.playerId) {
+					var newPaddlePos = p.paddle.pos;
+
+					console.log("newPaddlePos: " + newPaddlePos);
+					that.otherPlayer.paddle.config.position.y = newPaddlePos;
+				}
+			});
+		};
 	}
 
 	_extends(PlayerWall, Brick);
@@ -145,6 +168,11 @@ var pong = pong || {};
 	PlayerWall.prototype.points = function () {
 		return this.points();
 	};
+
+	PlayerWall.prototype.setOtherPlayer = function(player) {
+		this.otherPlayer = player;
+	};
+
 
 	PlayerWall.prototype.draw = function () {
 		//Brick.prototype.draw.call(this);
@@ -163,6 +191,11 @@ var pong = pong || {};
 		var ball = this.ball;
 		var pos = this.paddle.config.position;
 
+		var oldX = ball.position.x,
+			oldY = ball.position.y,
+			oldVelocityX = ball.velocity.x,
+			oldVelocityY = ball.velocity.y;
+
 		if (ball.velocity.x < 0 && ball.position.x - ball.r < pos.x + this.paddle.width) {
 			ball.velocity.x = -ball.velocity.x;
 			ball.position.x = pos.x + this.paddle.width + ball.r;
@@ -171,7 +204,8 @@ var pong = pong || {};
 		if (ball.velocity.x > 0 && ball.position.x + ball.r > pos.x) {
 			ball.position.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
-			return;
+
+			// return;   ??????????????????????????????????????
 		}
 
 		if (ball.x + ball.r >= pos.x) {
@@ -186,9 +220,21 @@ var pong = pong || {};
 			ball.y = io.canvas.height - ball.r - 20;
 			ball.velocity.y = -ball.velocity.y;
 		}
+
+		/*
+		this.pongGame.clientConfig.game.ball.x = ball.x;
+		this.pongGame.clientConfig.game.ball.y = ball.y;
+		this.pongGame.clientConfig.game.ball.dx = ball.velocity.x;
+		this.pongGame.clientConfig.game.ball.dy = ball.velocity.y;
+*/
+		// this.pongGame.clientConfig.ballUpdate(this.pongGame.clientConfig);
 	};
 
 	PlayerWall.prototype.update = function () {
+
+		var doIt =  (this.master && this.left || !this.master && !this.left);
+
+
 
 		var pos = this.paddle.config.position;
 		if (this.paddle.collidesWith(this.ball)) {
@@ -206,24 +252,35 @@ var pong = pong || {};
 			this.inWall = false;
 		}
 
-		var c = io.control();
-		if (c.up) {
-			this.direction = 'up';
-		} else if (c.down) {
-			this.direction = 'down';
-		}
 
-		if ('down' === this.direction) {
-			pos.y = pos.y + this.stepSize;
-		} else if ('up' === this.direction) {
-			pos.y = pos.y - this.stepSize;
-		}
+		if (doIt) {
+			var c = io.control();
+			if (c.up) {
+				this.direction = 'up';
+			} else if (c.down) {
+				this.direction = 'down';
+			}
 
-		// 20 ist die Höhe des Rahmens oben und unten
-		if (pos.y < 20) {
-			pos.y = 20;
-		} else if (pos.y > canvas.height - 100) {
-			pos.y = canvas.height - 100;
+			var oldY = pos.y;
+
+			if ('down' === this.direction) {
+				pos.y = pos.y + this.stepSize;
+			} else if ('up' === this.direction) {
+				pos.y = pos.y - this.stepSize;
+			}
+
+			// 20 ist die Höhe des Rahmens oben und unten
+			if (pos.y < 20) {
+				pos.y = 20;
+			} else if (pos.y > canvas.height - 100) {
+				pos.y = canvas.height - 100;
+			}
+
+			if (oldY !== pos.y) {
+				console.log("PADDLE UPDATE !!! " + oldY + " -> " + pos.y);
+				this.pongGame.clientConfig.game.players[this.playerId].paddle.pos = pos.y;
+				paddleUpdate(this.pongGame.clientConfig)
+			}
 		}
 	};
 
@@ -238,15 +295,22 @@ var pong = pong || {};
 (function (_extends, SimpleLogic) {
 	"use strict";
 
-	function PongGame() {
+	function PongGame(clientConfig) {
 		PongGame._super.constructor.call(this, {
 			gameName: 'pong',
 			description: 'Pong'
 		});
+
+		this.clientConfig = clientConfig;
 	}
 
 	_extends(PongGame, SimpleLogic);
 
+	PongGame.prototype.draw = function() {
+		io.context.fillStyle = 'black';
+		io.context.font = '12px sans-serif';
+		io.context.fillText("GameId: " + this.clientConfig.game.gameId, 20, 60);
+	};
 	pong.PongGame = PongGame;
 
 }(util._extends, game.SimpleLogic));

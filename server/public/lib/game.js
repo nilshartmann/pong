@@ -181,6 +181,26 @@ var game = game || {};
 
     var previousNow = now();
 
+	SimpleLogic.prototype.updateAndDraw = function(deltaT) {
+
+		// update
+		objects.forEach(function (object) {
+			if (object.update) {
+				object.update(deltaT);
+			}
+		});
+
+		// empty canvas
+		io.context.clearRect(0, 0, io.canvas.width, io.canvas.height);
+
+		// draw
+		objects.forEach(function (object) {
+			if (object.draw) {
+				object.draw();
+			}
+		});
+	};
+
     SimpleLogic.prototype.loop = function () {
         if (!this.gameOver) requestAnimationFrame(SimpleLogic.prototype.loop.bind(this));
         var control = io.control();
@@ -199,25 +219,9 @@ var game = game || {};
         var nextNow = now();
         var deltaT = nextNow - previousNow;
         previousNow = nextNow;
-        objects.forEach(function (object) {
-            if (object.update) {
-//                try {
-                object.update(deltaT);
-//                } catch (e) {
-//                    console.error("Error while updating object " + JSON.stringify(object), e);
-//                }
-            }
-        });
-        io.context.clearRect(0, 0, io.canvas.width, io.canvas.height);
-        objects.forEach(function (object) {
-            if (object.draw) {
-//                try {
-                object.draw();
-//                } catch (e) {
-//                    console.error("Error while drawing object " + JSON.stringify(object), e);
-//                }
-            }
-        });
+
+		this.updateAndDraw(deltaT);
+
     };
 
     var objects = [];
