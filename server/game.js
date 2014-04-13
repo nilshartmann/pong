@@ -109,8 +109,8 @@ function paddleUpdate(data) {
     console.log("Paddle Update: " + util.inspect(data));
     var gameId=data.gameid;
     var serverGame=serverGames[gameId];
-    serverGame.game.players[data.player.playerId].paddle=data.player.paddle;
     if(serverGame) {
+        serverGame.game.players[data.player.playerId].paddle=data.player.paddle;
         for(var clientId=0;clientId<serverGame.clients.length;clientId++) {
             if(clientId!=playerid) {
                 serverGame.clients[clientId].client.emit("paddleUpdate",data);
