@@ -79,7 +79,9 @@ function createCallbackFunctions(clientCfg) {
             clientCfg.game.players=data.game.players;
             clientCfg.game.ball = data.game.ball;
             // TODO gametime
+            data.game.playerId=clientCfg.game.playerId;
             clientCfg.game = data.game;
+
         }
     }
  return callbacks;
