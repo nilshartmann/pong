@@ -6,13 +6,18 @@
  * Location of the game server
  * @type {*|io.Socket}
  */
-var gameServer = io.connect('http://localhost:3000');
+var gameServer1 = io.connect('http://localhost:3000');
+var gameServer2 = io.connect('http://localhost:3000');
 
 /**
  * Configuration object.
  */
-var gameCfg = createGameConfig();
-var clientCfg = createClientConfig();
+var gameCfg1 = createGameConfig();
+var clientCfg1 = createClientConfig();
+
+var gameCfg2 = createGameConfig();
+var clientCfg2 = createClientConfig();
+
 
 
 var setConfig = function (config, data) {
@@ -21,7 +26,7 @@ var setConfig = function (config, data) {
     config.gameTime = data.gameTime;
 };
 
-var registerCallbacks = function () {
+var registerCallbacks = function (gameServer,gameCfg) {
     gameServer.on("ackCreateGame", function (data) {
         console.log(data);
         setConfig(gameCfg, data);
@@ -66,11 +71,11 @@ var createGame = function (config) {
         pos: 0,
         gameTime: config.gameTime
     };
-    gameServer.emit("createGame", {"gameTime": config.gameTime, paddle: config.players[0].paddle});
+    gameServer2.emit("createGame", {"gameTime": config.gameTime, paddle: config.players[0].paddle});
 };
 
 var joinGame = function (config) {
-    gameServer.emit("joinGame", {
+    gameServer2.emit("joinGame", {
         gameId: config.gameId,
         paddle: {
             pos: 0,
@@ -83,9 +88,9 @@ var joinGame = function (config) {
  *
  * @param clientCfg
  */
-var ping = function (clientCfg) {
+var ping = function (clientCfg, cb) {
     clientCfg.myTime = Date.now();
-    gameServer.emit("ping", Date.now(), function (clientTime) {
+    gameServer2.emit("ping", Date.now(), function (clientTime,gameTime) {
         console.log("pong");
         var currentLatenz = Date.now() - clientTime;
         console.log("Current-Latenz: " +currentLatenz);
@@ -96,11 +101,14 @@ var ping = function (clientCfg) {
         }
         console.log("Latenz: " + clientCfg.latency);
         console.log("Client Config " + clientCfg);
+        if(cb) {
+            cb(clientCfg.latency);
+        }
     })
 };
 
 var ballUpdate = function (config) {
-    gameServer.emit("ballUpdate", {
+    gameServer2.emit("ballUpdate", {
         ball: config.ball,
         "gameId": config.gameId,
         "playerId": config.playerId
@@ -108,26 +116,30 @@ var ballUpdate = function (config) {
 };
 
 var paddleUpdate = function (config) {
-    gameServer.emit("paddleUpdate", {
+    gameServer2.emit("paddleUpdate", {
         gameId: config.gameId,
         player: config.players[config.playerId]
     });
 };
 
-registerCallbacks();
+registerCallbacks(gameServer1,gameCfg1);
+registerCallbacks(gameServer2,gameCfg2);
 
-createGame(gameCfg);
-
-joinGame(gameCfg);
-
-ping(clientCfg);
-ping(clientCfg);
-ping(clientCfg);
+createGame(gameCfg1);
 
 
-gameCfg.ball.x=1;
-gameCfg.ball.y=1;
 
-ballUpdate(gameCfg);
+ping(clientCfg2);
+ping(clientCfg2);
+ping(clientCfg2, function(latency) {
+    joinGame(gameCfg2);
 
-paddleUpdate(gameCfg);
+});
+
+
+gameCfg2.ball.x=1;
+gameCfg2.ball.y=1;
+
+ballUpdate(gameCfg2);
+
+paddleUpdate(gameCfg2);
