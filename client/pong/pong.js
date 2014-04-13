@@ -68,10 +68,25 @@ var pong = pong || {};
 	_extends(MovingBall, Ball);
 	_mixin(MovingBall, MovingObject);
 
-	//MovingBall.prototype.control = control;
 	MovingBall.prototype.update = function (deltaT) {
-		//this.accelerate(deltaT);
 		this.inertiaMove(deltaT);
+	};
+
+	MovingBall.prototype.bounceOnEdges = function () {
+		if (this.position.x < this.r) {
+			this.position.x = io.canvas.width - this.r;
+		}
+		if (this.position.x >= io.canvas.width - this.r) {
+			this.position.x = this.r;
+		}
+		if (this.position.y < this.r) {
+			this.position.y = this.r;
+			this.velocity.y = -this.velocity.y;
+		}
+		if (this.position.y >= io.canvas.height - this.r) {
+			this.position.y = io.canvas.height - this.r;
+			this.velocity.y = -this.velocity.y;
+		}
 	};
 
 	pong.MovingBall = MovingBall;
@@ -79,15 +94,44 @@ var pong = pong || {};
 }(util._extends,util._mixin,io.canvas,game.GameObject,game.MovingObject,game.Ball));
 
 // ------------------------------------------------------------------------------------------------------
-// ----- P L A Y E R
+// ----- P L A Y E R W A L L
 // ------------------------------------------------------------------------------------------------------
-(function (_extends, _mixins, canvas, MovingObject, Brick) {
+
+(function (_extends, _mixins, context, canvas, MovingObject, Brick) {
 	"use strict";
 
-	function Player(x,y,simulate) {
-		Brick.call(this, x, y, 20, 80, 255, 0, 0);
+	function PlayerWall(x,y,w,h) {
+
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+	}
+
+	PlayerWall.prototype.draw = function() {
+		context.strokeStyle = "blue";
+		context.strokeRect(this.x, this.y, this.w, this.h);
+	};
+
+	pong.PlayerWall = PlayerWall;
+
+
+}(util._extends, util._mixin, io.context, io.canvas, game.MovingObject, game.Brick));
+
+// ------------------------------------------------------------------------------------------------------
+// ----- P L A Y E R
+// ------------------------------------------------------------------------------------------------------
+(function (_extends, _mixins, context, canvas, MovingObject, Brick) {
+	"use strict";
+
+	function Player(x,y,w,h,color, simulate) {
+		Brick.call(this, x, y, w, h, 255, 0, 0);
 		this.stepSize = 5;
 		this.simulate = simulate;
+
+		this.points = 10;
+
+
 		if (this.simulate) {
 			this.direction = 'down';
 		}
@@ -95,6 +139,10 @@ var pong = pong || {};
 
 	_extends(Player, Brick);
 	_extends(Player, Brick);
+
+	Player.prototype.points = function() {
+		this.points--;
+	};
 
 	Player.prototype.update = function () {
 
@@ -132,7 +180,7 @@ var pong = pong || {};
 
 	// Export Player
 	pong.Player = Player;
-}(util._extends, util._mixin, io.canvas, game.MovingObject, pong.Brick));
+}(util._extends, util._mixin, io.context, io.canvas, game.MovingObject, pong.Brick));
 
 // ------------------------------------------------------------------------------------------------------
 // ----- G A M E
