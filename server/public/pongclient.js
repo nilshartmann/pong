@@ -88,11 +88,13 @@ var ping = function (clientCfg) {
     gameServer.emit("ping", Date.now(), function (clientTime) {
         console.log("pong");
         var currentLatenz = Date.now() - clientTime;
+        console.log("Current-Latenz: " +currentLatenz);
         if (clientCfg.latency) {
             clientCfg.latency = ( clientCfg.latency + currentLatenz ) / 2;
         } else {
             clientCfg.latency = currentLatenz;
         }
+        console.log("Latenz: " + clientCfg.latency);
         console.log("Client Config " + clientCfg);
     })
 };
@@ -119,8 +121,9 @@ createGame(gameCfg);
 joinGame(gameCfg);
 
 ping(clientCfg);
-
 ping(clientCfg);
+ping(clientCfg);
+
 
 gameCfg.ball.x=1;
 gameCfg.ball.y=1;
