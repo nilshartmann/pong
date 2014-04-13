@@ -10,16 +10,21 @@ var games = [];
 
 
 exports.onConnection= function (clientSocket) {
+    clientSocket.on('ping', function (pongFunction) {
+        pongFunction()
+    });
     clientSocket.on('createGame', function (data) {
         createGame(clientSocket,data);
     });
     clientSocket.on('joinGame', function (data) {
         joinGame(clientSocket,data);
     });
-    clientSocket.on('ping', function (pongFunction) {
-        pongFunction()
+    clientSocket.on('ballUpdate', function (data) {
+        ballUpdate(clientSocket,data);
     });
-
+    clientSocket.on('paddleUpdate', function (data) {
+        paddleUpdate(clientSocket,data);
+    });
 }
 
 function createGame(clientSocket,data) {
@@ -30,12 +35,15 @@ function createGame(clientSocket,data) {
     }
 
     games.push(game);
-    clientSocket.emit("ackCreateGame",{ game: game.id, playerid: 0});
+    clientSocket.emit("ackCreateGame",{
+        gameid: game.gameid,
+        playerid: 0
+    });
     console.log("Create game: " + util.inspect(game));
 }
 
 function joinGame(clientSocket,data) {
-    var gameId=data;
+    var gameId=data.gameid;
     var currentGame=games[gameId];
     if(currentGame) {
         currentGame.clients.push(clientSocket);
@@ -45,8 +53,39 @@ function joinGame(clientSocket,data) {
             playerid: currentGame.clients.length,
             gametime: gameTime(currentGame)
         });
+
+        console.log("Join game: " + util.inspect(currentGame));
     }
 }
+
+function ballUpdate(clientSocket,data) {
+    console.log("Ball Update: " + util.inspect(data));
+    var gameId=data.gameid;
+    var playerid=data.playerid;
+    var currentGame=games[gameId];
+    if(currentGame) {
+        for(var player=0;player<currentGame.clients.length;player++) {
+            if(player!=playerid) {
+                clientSocket.emit("ballUpdate",data);
+            }
+        }
+    }
+}
+
+function paddleUpdate(clientSocket,data) {
+    console.log("Paddle Update: " + util.inspect(data));
+    var gameId=data.gameid;
+    var playerid=data.playerid;
+    var currentGame=games[gameId];
+    if(currentGame) {
+        for(var player=0;player<currentGame.clients.length;player++) {
+            if(player!=playerid) {
+                clientSocket.emit("paddleUpdate",data);
+            }
+        }
+    }
+}
+
 
 function gameTime(game) {
     return Date.now()-game.timeDelta;
