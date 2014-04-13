@@ -30,8 +30,8 @@ var pong = pong || {};
 
 	Brick.prototype.collidesWith = function (ball) {
 		var pos = this.config.position;
-		pos.w = 70;
-		pos.h = 30;
+		pos.w = this.config.width;
+		pos.h = this.config.height;
 		var distX = Math.abs(ball.position.x - pos.x - pos.w / 2);
 		var distY = Math.abs(ball.position.y - pos.y - pos.h / 2);
 
@@ -153,40 +153,78 @@ var pong = pong || {};
 		this.paddle.draw();
 	};
 
-	PlayerWall.prototype.bounceOnPaddleCollision = function(pos, ball) {
+	PlayerWall.prototype.bounceOnPaddleCollision = function() {
 
+		var ball = this.ball;
+		var pos = this.paddle.config.position;
+
+		if (this.paddle.config.color === 'blue') {
+			console.log('BOUNCE ON BLUE vel:' + ball.velocity.x);
+
+			if (ball.velocity.x > 0) {
+				// Ball kommt von links "wieder herein" => durchlassen
+				console.log(" WIEDER REIN VON LINKS");
+				return;
+			}
+
+			if (ball.position.x-ball.r < pos.x + this.paddle.width) {
+				ball.velocity.x = -ball.velocity.x;
+				ball.position.x = pos.x + this.paddle.width + ball.r;
+			}
+
+
+
+
+		} else {
+			console.log("BOUNCE ON GRAY vel:" + ball.velocity.x + " ball.x: " + ball.position.x + ", r: " + ball.r + ", pos.x: " + pos.x);
+
+			if (ball.velocity.x < 0) {
+				// Ball kommt von rechts "wieder herein" => durchlassen
+				console.log(" WIEDER REIN VON RECHTS");
+				return;
+			}
+
+			if (ball.position.x + ball.r > pos.x) {
+				console.log(" GRAU EINS");
+				ball.position.x = pos.x - ball.r;
+				ball.velocity.x = -ball.velocity.x;
+				return;
+			}
+
+
+
+		}
 		//
 
-		if (ball.x + ball.r < pos.x) {
-			console.log("EINS");
-			ball.x = pos.x + ball.r;
-			ball.velocity.x = -ball.velocity.x;
-		}
+
+
 		if (ball.x + ball.r >= pos.x) {
+			console.log("ZWEI " + this.paddle.config.color);
 			ball.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
 		}
 		if (pos.y < ball.r) {
+			console.log("DREI " + this.paddle.config.color);
 			ball.y = ball.r;
 			ball.velocity.y = -ball.velocity.y;
 		}
 		if (pos.y >= io.canvas.height - ball.r - 20) {
+			console.log("VIER " + this.paddle.config.color);
 			ball.y = io.canvas.height - ball.r - 20;
 			ball.velocity.y = -ball.velocity.y;
 		}
 	};
 
+	var xxx = 0;
+
 	PlayerWall.prototype.update = function () {
 
 		var pos = this.paddle.config.position;
-/*
 		if (this.paddle.collidesWith(this.ball)) {
-			console.log("COLISION");
-			this.bounceOnPaddleCollision(pos, this.ball);
-
+			xxx++;
+			this.bounceOnPaddleCollision();
 			return;
 		}
-		*/
 
 
 
