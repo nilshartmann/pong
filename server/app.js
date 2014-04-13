@@ -37,9 +37,7 @@ var server=http.createServer(app).listen(app.get('port'), function(){
 
 var io = socketio.listen(server)
 io.sockets.on('connection', function (socket) {
-    socket.on('createGame', function (data) {
-        var result=game.createGame(data);
-        socket.emit("ackCreateGame",result);
-    });
+    game.onConnection(socket);
+
 });
 
