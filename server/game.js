@@ -63,18 +63,23 @@ function joinGame(clientSocket,data) {
             paddle: data.paddle
         }
 
+        var gameTime=gameTime(serverGame);
+        player.paddle.gameTime=gameTime;
+
         serverGame.game.players.push(player),
         serverGame.clients.push(clientSocket);
         var gameTime=gameTime(serverGame);
         clientSocket.emit("ackJoinGame",{
             gameId: serverGame.id,
             playerId: player.playerId,
-            gameTime: gameTime(serverGame),
+            gameTime: gameTime,
             game: serverGame.game
         });
 
         for(var clientId=0;clientId<serverGame.clients.length-1;clientId++) {
-            serverGame.clients[clientId].emit("playerJoined", serverGame.game);
+            serverGame.clients[clientId].emit("playerJoined", {
+                game: serverGame.game
+            });
         }
 
         console.log("Join game: " + util.inspect(serverGame));
@@ -100,9 +105,8 @@ function ballUpdate(clientSocket,data) {
 function paddleUpdate(clientSocket,data) {
     console.log("Paddle Update: " + util.inspect(data));
     var gameId=data.gameid;
-    var playerid=data.playerid;
     var serverGame=serverGames[gameId];
-    serverGame.game.players[playerid].paddle=data.paddle;
+    serverGame.game.players[data.player.playerId].paddle=data.player.paddle;
     if(serverGame) {
         for(var clientId=0;clientId<serverGame.clients.length;clientId++) {
             if(clientId!=playerid) {
