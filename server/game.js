@@ -28,31 +28,54 @@ exports.onConnection= function (clientSocket) {
 }
 
 function createGame(clientSocket,data) {
+    var player = {
+        playerId: 0,
+        paddle: data.paddle
+    }
+
     var game= {
         id: nextGame++,
-        timeDelta: Date.now()-data.time,
+        players: [player],
+        ball: undefined
+    }
+
+    var servergame = {
+        game: game,
+        timeDelta: Date.now()-data.gameTime,
         clients: [clientSocket]
     }
 
-    games.push(game);
+    games.push(servergame);
     clientSocket.emit("ackCreateGame",{
-        gameid: game.gameid,
-        playerid: 0
+        gameId: game.gameid,
+        playerId: 0
     });
     console.log("Create game: " + util.inspect(game));
 }
 
 function joinGame(clientSocket,data) {
-    var gameId=data.gameid;
+    var gameId=data.gameId;
     var currentGame=games[gameId];
+
     if(currentGame) {
+        var player = {
+            playerId: currentGame.game.players.length+1,
+            paddle: data.paddle
+        }
+
+        currentGame.game.players.push(player),
         currentGame.clients.push(clientSocket);
         var gameTime=gameTime(currentGame);
         clientSocket.emit("ackJoinGame",{
-            game: currentGame.id,
-            playerid: currentGame.clients.length,
-            gametime: gameTime(currentGame)
+            gameId: currentGame.id,
+            playerId: player.playerId,
+            gameTime: gameTime(currentGame),
+            game: currentGame.game
         });
+
+        for(var clientId=0;clientId<currentGame.clients.length-1;clientId++) {
+            currentGame.clients[clientId].emit("playerJoined", currentGame.game);
+        }
 
         console.log("Join game: " + util.inspect(currentGame));
     }
@@ -60,13 +83,15 @@ function joinGame(clientSocket,data) {
 
 function ballUpdate(clientSocket,data) {
     console.log("Ball Update: " + util.inspect(data));
-    var gameId=data.gameid;
-    var playerid=data.playerid;
+    var gameId=data.gameId;
+    var playerid=data.playerId;
     var currentGame=games[gameId];
+    currentGame.game.ball=data.ball;
+
     if(currentGame) {
         for(var player=0;player<currentGame.clients.length;player++) {
             if(player!=playerid) {
-                clientSocket.emit("ballUpdate",data);
+                currentGame.clients[player].emit("ballUpdate",data);
             }
         }
     }
@@ -77,10 +102,11 @@ function paddleUpdate(clientSocket,data) {
     var gameId=data.gameid;
     var playerid=data.playerid;
     var currentGame=games[gameId];
+    currentGame.game.players[playerid].paddle=data.paddle;
     if(currentGame) {
         for(var player=0;player<currentGame.clients.length;player++) {
             if(player!=playerid) {
-                clientSocket.emit("paddleUpdate",data);
+                currentGame.clients[player].client.emit("paddleUpdate",data);
             }
         }
     }
