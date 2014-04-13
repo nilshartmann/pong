@@ -16,8 +16,8 @@ exports.onConnection= function (clientSocket) {
     clientSocket.on('joinGame', function (data) {
         joinGame(clientSocket,data);
     });
-    clientSocket.on('ping', function (data) {
-        clientSocket.emit("pong", {});
+    clientSocket.on('ping', function (pongFunction) {
+        pongFunction()
     });
 
 }
