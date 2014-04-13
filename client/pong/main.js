@@ -14,8 +14,10 @@ for (var j = 0;j<no;j++) {
 	pongGame.addObject(b);
 }
 
-var playerLeft = new pong.Player(0, (io.canvas.height-20) / 2);
-var playerRight = new pong.Player(io.canvas.width-20, (io.canvas.height-20) / 2, true);
+var playerLeft = new pong.Player(0, 20, 20, io.canvas.height-20, 'blue');
+var playerRight = new pong.Player(io.canvas.width-20, io.canvas.height-20, 'gray', true);
+
+//var playerWallLeft = new pong.PlayerWall(0,20,20, io.canvas.height-20)
 
 var movingBall = new pong.MovingBall(100,100);
 
