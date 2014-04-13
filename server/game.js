@@ -2,7 +2,7 @@
  * Created by rene on 13.04.14.
  */
 
-var util = require('util')
+var util = require('util');
 
 var nextGame=0;
 
@@ -20,12 +20,12 @@ exports.onConnection= function (clientSocket) {
         joinGame(clientSocket,data);
     });
     clientSocket.on('ballUpdate', function (data) {
-        ballUpdate(clientSocket,data);
+        ballUpdate(data);
     });
     clientSocket.on('paddleUpdate', function (data) {
-        paddleUpdate(clientSocket,data);
+        paddleUpdate(data);
     });
-}
+};
 
 function calcGameTime(game) {
     return Date.now()-game.timeDelta;
@@ -35,19 +35,19 @@ function createGame(clientSocket,data) {
     var player = {
         playerId: 0,
         paddle: data.paddle
-    }
+    };
 
     var game= {
         id: nextGame++,
         players: [player],
         ball: undefined
-    }
+    };
 
     var servergame = {
         game: game,
         timeDelta: Date.now()-data.gameTime,
         clients: [clientSocket]
-    }
+    };
 
     serverGames.push(servergame);
     clientSocket.emit("ackCreateGame",{
@@ -65,12 +65,12 @@ function joinGame(clientSocket,data) {
         var player = {
             playerId: serverGame.game.players.length+1,
             paddle: data.paddle
-        }
+        };
 
         var gameTime=calcGameTime(serverGame);
         player.paddle.gameTime=gameTime;
 
-        serverGame.game.players.push(player),
+        serverGame.game.players.push(player);
         serverGame.clients.push(clientSocket);
         clientSocket.emit("ackJoinGame",{
             gameId: serverGame.id,
@@ -89,7 +89,7 @@ function joinGame(clientSocket,data) {
     }
 }
 
-function ballUpdate(clientSocket,data) {
+function ballUpdate(data) {
     console.log("Ball Update: " + util.inspect(data));
     var gameId=data.gameId;
     var playerid=data.playerId;
@@ -105,7 +105,7 @@ function ballUpdate(clientSocket,data) {
     }
 }
 
-function paddleUpdate(clientSocket,data) {
+function paddleUpdate(data) {
     console.log("Paddle Update: " + util.inspect(data));
     var gameId=data.gameid;
     var serverGame=serverGames[gameId];
