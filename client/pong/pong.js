@@ -100,10 +100,10 @@ var pong = pong || {};
 	};
 
 	MovingBall.prototype.bounceOnEdges = function () {
-		if (this.position.x < this.r) {
+		if (this.position.x < this.r ) {
 			this.position.x = io.canvas.width - this.r;
 		}
-		if (this.position.x >= io.canvas.width - this.r) {
+		if (this.position.x > io.canvas.width - this.r) {
 			this.position.x = this.r;
 		}
 		if (this.position.y  < this.r + 20) {
@@ -151,6 +151,11 @@ var pong = pong || {};
 		// Nur den "Paddle" zeichnen
 
 		this.paddle.draw();
+
+		io.context.fillStyle = 'black';
+		io.context.font = '12px sans-serif';
+		var x = (this.config.position.x === 0 ? 0 : 500);
+		io.context.fillText("Punkte: " + this.points, x, io.canvas.height - 20);
 	};
 
 	PlayerWall.prototype.bounceOnPaddleCollision = function() {
@@ -172,9 +177,6 @@ var pong = pong || {};
 				ball.position.x = pos.x + this.paddle.width + ball.r;
 			}
 
-
-
-
 		} else {
 			console.log("BOUNCE ON GRAY vel:" + ball.velocity.x + " ball.x: " + ball.position.x + ", r: " + ball.r + ", pos.x: " + pos.x);
 
@@ -185,48 +187,38 @@ var pong = pong || {};
 			}
 
 			if (ball.position.x + ball.r > pos.x) {
-				console.log(" GRAU EINS");
 				ball.position.x = pos.x - ball.r;
 				ball.velocity.x = -ball.velocity.x;
 				return;
 			}
-
-
-
 		}
 		//
 
-
-
 		if (ball.x + ball.r >= pos.x) {
-			console.log("ZWEI " + this.paddle.config.color);
 			ball.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
 		}
 		if (pos.y < ball.r) {
-			console.log("DREI " + this.paddle.config.color);
 			ball.y = ball.r;
 			ball.velocity.y = -ball.velocity.y;
 		}
 		if (pos.y >= io.canvas.height - ball.r - 20) {
-			console.log("VIER " + this.paddle.config.color);
 			ball.y = io.canvas.height - ball.r - 20;
 			ball.velocity.y = -ball.velocity.y;
 		}
 	};
 
-	var xxx = 0;
-
 	PlayerWall.prototype.update = function () {
 
 		var pos = this.paddle.config.position;
 		if (this.paddle.collidesWith(this.ball)) {
-			xxx++;
 			this.bounceOnPaddleCollision();
 			return;
 		}
 
-
+		if (this.collidesWith(this.ball)) {
+			this.points--;
+		}
 
 		var c = io.control();
 		if (c.up) {
@@ -234,7 +226,6 @@ var pong = pong || {};
 		} else if (c.down) {
 			this.direction = 'down';
 		}
-
 
 		if ('down' === this.direction) {
 			pos.y = pos.y + this.stepSize;
