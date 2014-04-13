@@ -38,7 +38,7 @@ function createGame(clientSocket,data) {
     };
 
     var game= {
-        id: nextGame++,
+        gameId: nextGame++,
         players: [player],
         ball: undefined
     };
@@ -58,12 +58,13 @@ function createGame(clientSocket,data) {
 }
 
 function joinGame(clientSocket,data) {
+    console.log("Join game entry: " + util.inspect(data,{depth: 3}));
     var gameId=data.gameId;
     var serverGame=serverGames[gameId];
 
     if(serverGame) {
         var player = {
-            playerId: serverGame.game.players.length+1,
+            playerId: serverGame.game.players.length,
             paddle: data.paddle
         };
 
@@ -85,20 +86,20 @@ function joinGame(clientSocket,data) {
             });
         }
 
-        console.log("Join game: " + util.inspect(serverGame));
+        console.log("Join game exit: " + util.inspect(serverGame.game,{depth: 3}));
     }
 }
 
 function ballUpdate(data) {
     console.log("Ball Update: " + util.inspect(data));
     var gameId=data.gameId;
-    var playerid=data.playerId;
+    var playerId=data.playerId;
     var serverGame=serverGames[gameId];
     serverGame.game.ball=data.ball;
 
     if(serverGame) {
         for(var clientId=0;clientId<serverGame.clients.length;clientId++) {
-            if(clientId!=playerid) {
+            if(clientId!=playerId) {
                 serverGame.clients[clientId].emit("ballUpdate",data);
             }
         }
@@ -107,13 +108,14 @@ function ballUpdate(data) {
 
 function paddleUpdate(data) {
     console.log("Paddle Update: " + util.inspect(data));
-    var gameId=data.gameid;
+    var gameId=data.gameId;
+    var playerId=data.playerId;
     var serverGame=serverGames[gameId];
     if(serverGame) {
         serverGame.game.players[data.player.playerId].paddle=data.player.paddle;
         for(var clientId=0;clientId<serverGame.clients.length;clientId++) {
-            if(clientId!=playerid) {
-                serverGame.clients[clientId].client.emit("paddleUpdate",data);
+            if(clientId!=playerId) {
+                serverGame.clients[clientId].emit("paddleUpdate",data);
             }
         }
     }

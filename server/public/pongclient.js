@@ -35,6 +35,7 @@ var registerCallbacks = function () {
     });
 
     gameServer.on("ballUpdate", function (data) {
+        console.log("ballUpdate");
         console.log(data);
         console.log("TODO");
         ball = data.ball;
@@ -43,11 +44,13 @@ var registerCallbacks = function () {
     });
 
     gameServer.on("paddleUpdate", function (data) {
+        console.log("paddleUpdate");
         console.log(data);
         gameCfg.players[data.player.playerId].paddle = data.player.paddle;
     });
 
     gameServer.on("playerJoined", function (data) {
+        console.log("playerJoined");
         console.log(data);
         console.log("TODO");
         // TODO gametime
@@ -118,6 +121,9 @@ joinGame(gameCfg);
 ping(clientCfg);
 
 ping(clientCfg);
+
+gameCfg.ball.x=1;
+gameCfg.ball.y=1;
 
 ballUpdate(gameCfg);
 
