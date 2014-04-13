@@ -28,6 +28,33 @@ var pong = pong || {};
 		context.fillRect(this.config.position.x, this.config.position.y, this.config.width, this.config.height);
 	};
 
+	Brick.prototype.collidesWith = function (ball) {
+		var pos = this.config.position;
+		pos.w = 70;
+		pos.h = 30;
+		var distX = Math.abs(ball.position.x - pos.x - pos.w / 2);
+		var distY = Math.abs(ball.position.y - pos.y - pos.h / 2);
+
+		if (distX > (pos.w / 2 + ball.r)) {
+			return false;
+		}
+		if (distY > (pos.h / 2 + ball.r)) {
+			return false;
+		}
+
+		if (distX <= (pos.w / 2)) {
+			return true;
+		}
+		if (distY <= (pos.h / 2)) {
+			return true;
+		}
+
+		var dx = distX - pos.w / 2;
+		var dy = distY - pos.h / 2;
+		return (dx * dx + dy * dy <= (ball.r * ball.r));
+	};
+
+
 	pong.Brick = Brick;
 
 }(util._extends, game.SimpleLogic, game.GameObject, io.context));
@@ -79,12 +106,12 @@ var pong = pong || {};
 		if (this.position.x >= io.canvas.width - this.r) {
 			this.position.x = this.r;
 		}
-		if (this.position.y < this.r) {
-			this.position.y = this.r;
+		if (this.position.y  < this.r + 20) {
+			this.position.y = 20 + this.r;
 			this.velocity.y = -this.velocity.y;
 		}
-		if (this.position.y >= io.canvas.height - this.r) {
-			this.position.y = io.canvas.height - this.r;
+		if (this.position.y >= io.canvas.height - this.r - 20) {
+			this.position.y = io.canvas.height - this.r - 20;
 			this.velocity.y = -this.velocity.y;
 		}
 	};
@@ -96,65 +123,78 @@ var pong = pong || {};
 // ------------------------------------------------------------------------------------------------------
 // ----- P L A Y E R W A L L
 // ------------------------------------------------------------------------------------------------------
-
 (function (_extends, _mixins, context, canvas, MovingObject, Brick) {
 	"use strict";
 
-	function PlayerWall(x,y,w,h) {
-
-		this.x = x;
-		this.y = y;
-		this.w = w;
-		this.h = h;
-	}
-
-	PlayerWall.prototype.draw = function() {
-		context.strokeStyle = "blue";
-		context.strokeRect(this.x, this.y, this.w, this.h);
-	};
-
-	pong.PlayerWall = PlayerWall;
-
-
-}(util._extends, util._mixin, io.context, io.canvas, game.MovingObject, game.Brick));
-
-// ------------------------------------------------------------------------------------------------------
-// ----- P L A Y E R
-// ------------------------------------------------------------------------------------------------------
-(function (_extends, _mixins, context, canvas, MovingObject, Brick) {
-	"use strict";
-
-	function Player(x,y,w,h,color, simulate) {
-		Brick.call(this, x, y, w, h, 255, 0, 0);
+	function PlayerWall(ball, x,y,w,h, color, simulate) {
+		Brick.call(this, x, y, w, h,  'white');
 		this.stepSize = 5;
 		this.simulate = simulate;
-
 		this.points = 10;
+		this.ball = ball;
 
+		this.paddle = new Brick(x,(io.canvas.height-20)/2,20,80, color);
 
 		if (this.simulate) {
 			this.direction = 'down';
 		}
 	}
 
-	_extends(Player, Brick);
-	_extends(Player, Brick);
+	_extends(PlayerWall, Brick);
 
-	Player.prototype.points = function() {
+	PlayerWall.prototype.points = function() {
 		this.points--;
 	};
 
-	Player.prototype.update = function () {
+	PlayerWall.prototype.draw = function() {
+		//Brick.prototype.draw.call(this);
+		// Nur den "Paddle" zeichnen
 
-		var pos = this.config.position;
+		this.paddle.draw();
+	};
 
-		if (!this.simulate) {
-			var c = io.control();
-			if (c.up) {
-				this.direction = 'up';
-			} else if (c.down) {
-				this.direction = 'down';
-			}
+	PlayerWall.prototype.bounceOnPaddleCollision = function(pos, ball) {
+
+		//
+
+		if (ball.x + ball.r < pos.x) {
+			console.log("EINS");
+			ball.x = pos.x + ball.r;
+			ball.velocity.x = -ball.velocity.x;
+		}
+		if (ball.x + ball.r >= pos.x) {
+			ball.x = pos.x - ball.r;
+			ball.velocity.x = -ball.velocity.x;
+		}
+		if (pos.y < ball.r) {
+			ball.y = ball.r;
+			ball.velocity.y = -ball.velocity.y;
+		}
+		if (pos.y >= io.canvas.height - ball.r - 20) {
+			ball.y = io.canvas.height - ball.r - 20;
+			ball.velocity.y = -ball.velocity.y;
+		}
+	};
+
+	PlayerWall.prototype.update = function () {
+
+		var pos = this.paddle.config.position;
+/*
+		if (this.paddle.collidesWith(this.ball)) {
+			console.log("COLISION");
+			this.bounceOnPaddleCollision(pos, this.ball);
+
+			return;
+		}
+		*/
+
+
+
+		var c = io.control();
+		if (c.up) {
+			this.direction = 'up';
+		} else if (c.down) {
+			this.direction = 'down';
 		}
 
 
@@ -167,19 +207,15 @@ var pong = pong || {};
 		// 20 ist die Höhe des Rahmens oben und unten
 		if (pos.y < 20) {
 			pos.y = 20;
-			if (this.simulate) {
-				this.direction = 'down';
-			}
 		} else if (pos.y > canvas.height - 100) {
 			pos.y = canvas.height - 100;
-			if (this.simulate) {
-				this.direction = 'up';
-			}
 		}
 	};
 
-	// Export Player
-	pong.Player = Player;
+
+
+	// Export PlayerWall
+	pong.PlayerWall = PlayerWall;
 }(util._extends, util._mixin, io.context, io.canvas, game.MovingObject, pong.Brick));
 
 // ------------------------------------------------------------------------------------------------------

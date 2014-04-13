@@ -14,12 +14,13 @@ for (var j = 0;j<no;j++) {
 	pongGame.addObject(b);
 }
 
-var playerLeft = new pong.Player(0, 20, 20, io.canvas.height-20, 'blue');
-var playerRight = new pong.Player(io.canvas.width-20, io.canvas.height-20, 'gray', true);
+var movingBall = new pong.MovingBall(100,100);
+var playerLeft = new pong.PlayerWall(movingBall, 0, 20, 20, io.canvas.height-20, 'blue');
+var playerRight = new pong.PlayerWall(movingBall, io.canvas.width-20, 20, 20, io.canvas.height-20, 'gray');
 
 //var playerWallLeft = new pong.PlayerWall(0,20,20, io.canvas.height-20)
 
-var movingBall = new pong.MovingBall(100,100);
+
 
 pongGame.addObject(borderTop);
 pongGame.addObject(borderBottom);
