@@ -4,13 +4,14 @@
 
 
 
-function callbackFunctions(gameCfg) {
+function callbackFunctions(gameCfg, clientCfg) {
     return {
         ackCreateGame: function (data) {
             console.log(data);
             gameCfg.gameId = data.gameId;
             gameCfg.playerId = data.playerId;
             gameCfg.gameTime = data.gameTime;
+            clientCfg.timeDelta=0;
             console.log(gameCfg);
         },
         ackJoinGame: function (data) {
@@ -20,7 +21,7 @@ function callbackFunctions(gameCfg) {
             gameCfg.gameTime = data.gameTime;
             gameCfg.players=data.game.players;
             gameCfg.ball = data.game.ball;
-
+            clientCfg.timeDelta=Date.now()-gameCfg.gameTime+clientCfg.latency;
             // TODO gametime
         },
         ballUpdate: function (data) {
@@ -103,7 +104,8 @@ var ping = function (gameServer,clientCfg, cb) {
     })
 };
 
-var ballUpdate = function (gameServer,config) {
+var ballUpdate = function (gameServer,config,clientCfg) {
+    config.ball.gameTime=Date.now()-clientCfg.timeDelta;
     gameServer.emit("ballUpdate", {
         ball: config.ball,
         "gameId": config.gameId,
@@ -111,7 +113,9 @@ var ballUpdate = function (gameServer,config) {
     });
 };
 
-var paddleUpdate = function (gameServer,config) {
+var paddleUpdate = function (gameServer,config,clientCfg) {
+    config.players[config.playerId].paddle.gameTime=Date.now()-clientCfg.timeDelta;
+    config.ball.gameTime=Date.now()-clientCfg.timeDelta;
     gameServer.emit("paddleUpdate", {
         gameId: config.gameId,
         player: config.players[config.playerId]

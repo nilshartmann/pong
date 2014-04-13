@@ -14,11 +14,11 @@ var gameServer2 = io.connect('http://localhost:3000');
  */
 var gameCfg1 = createGameConfig();
 var clientCfg1 = createClientConfig();
-var callbackFunctions1 = callbackFunctions(gameCfg1)
+var callbackFunctions1 = callbackFunctions(gameCfg1,clientCfg1);
 
 var gameCfg2 = createGameConfig();
 var clientCfg2 = createClientConfig();
-var callbackFunctions2 = callbackFunctions(gameCfg2)
+var callbackFunctions2 = callbackFunctions(gameCfg2,clientCfg2);
 
 
 registerCallbacks(gameServer1, gameCfg1, callbackFunctions1);

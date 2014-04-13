@@ -6,7 +6,7 @@ var createGameConfig = function () {
     return {
         gameId: 0,
         playerId: 0,
-        gameTime: Date.now(),
+        gameTime: undefined,
         players: [],
         ball: {
             x: 0,
@@ -19,7 +19,8 @@ var createGameConfig = function () {
 
 var createClientConfig = function() {
     return {
-        latency: undefined
+        latency: undefined,
+
     }
 }
 var createPlayer = function() {
