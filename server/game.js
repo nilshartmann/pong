@@ -10,14 +10,14 @@ var serverGames = [];
 
 
 exports.onConnection= function (clientSocket) {
-    clientSocket.on('ping', function (clientTime, pongFunction) {
-        pongFunction(clientTime)
+    clientSocket.on('ping', function (clientTime, pongCallback) {
+        pongCallback(clientTime)
     });
-    clientSocket.on('createGame', function (data) {
-        createGame(clientSocket,data);
+    clientSocket.on('createGame', function (data, createGameCallback) {
+        createGame(clientSocket,data,createGameCallback);
     });
-    clientSocket.on('joinGame', function (data) {
-        joinGame(clientSocket,data);
+    clientSocket.on('joinGame', function (data,joinGameCallback) {
+        joinGame(clientSocket,data,joinGameCallback);
     });
     clientSocket.on('ballUpdate', function (data) {
         ballUpdate(data);
@@ -31,7 +31,7 @@ function calcGameTime(game) {
     return Date.now()-game.timeDelta;
 }
 
-function createGame(clientSocket,data) {
+function createGame(clientSocket,data,createGameCallback) {
     var player = {
         playerId: 0,
         paddle: data.paddle
@@ -50,14 +50,14 @@ function createGame(clientSocket,data) {
     };
 
     serverGames.push(servergame);
-    clientSocket.emit("ackCreateGame",{
+    createGameCallback({
         gameId: game.gameid,
         playerId: 0
     });
     console.log("Create game: " + util.inspect(game));
 }
 
-function joinGame(clientSocket,data) {
+function joinGame(clientSocket,data,joinGameCallback) {
     console.log("Join game entry: " + util.inspect(data,{depth: 3}));
     var gameId=data.gameId;
     var serverGame=serverGames[gameId];
@@ -73,7 +73,7 @@ function joinGame(clientSocket,data) {
 
         serverGame.game.players.push(player);
         serverGame.clients.push(clientSocket);
-        clientSocket.emit("ackJoinGame",{
+        joinGameCallback({
             gameId: serverGame.id,
             playerId: player.playerId,
             gameTime: gameTime,
