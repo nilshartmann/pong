@@ -27,6 +27,10 @@ exports.onConnection= function (clientSocket) {
     });
 }
 
+function calcGameTime(game) {
+    return Date.now()-game.timeDelta;
+}
+
 function createGame(clientSocket,data) {
     var player = {
         playerId: 0,
@@ -63,12 +67,11 @@ function joinGame(clientSocket,data) {
             paddle: data.paddle
         }
 
-        var gameTime=gameTime(serverGame);
+        var gameTime=calcGameTime(serverGame);
         player.paddle.gameTime=gameTime;
 
         serverGame.game.players.push(player),
         serverGame.clients.push(clientSocket);
-        var gameTime=gameTime(serverGame);
         clientSocket.emit("ackJoinGame",{
             gameId: serverGame.id,
             playerId: player.playerId,
@@ -117,6 +120,3 @@ function paddleUpdate(clientSocket,data) {
 }
 
 
-function gameTime(game) {
-    return Date.now()-game.timeDelta;
-}
