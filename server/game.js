@@ -2,6 +2,8 @@
  * Created by rene on 13.04.14.
  */
 
+var util = require('util')
+
 var nextGame=0;
 
 var games = [];
@@ -14,26 +16,38 @@ exports.onConnection= function (clientSocket) {
     clientSocket.on('joinGame', function (data) {
         joinGame(clientSocket,data);
     });
+    clientSocket.on('ping', function (data) {
+        clientSocket.emit("pong", {});
+    });
 
 }
 
 function createGame(clientSocket,data) {
     var game= {
         id: nextGame++,
-        timeDelta: Date.now()-data.basetime,
+        timeDelta: Date.now()-data.time,
         clients: [clientSocket]
     }
 
     games.push(game);
-
     clientSocket.emit("ackCreateGame",{ game: game.id, playerid: 0});
+    console.log("Create game: " + util.inspect(game));
 }
 
 function joinGame(clientSocket,data) {
     var gameId=data;
-    var game=games[gameId];
-    if(game) {
-        game.clients.push(clientSocket);
-        clientSocket.emit("ackJoinGame",{ game: game.id, playerid:game.clients.length});
+    var currentGame=games[gameId];
+    if(currentGame) {
+        currentGame.clients.push(clientSocket);
+        var gameTime=gameTime(currentGame);
+        clientSocket.emit("ackJoinGame",{
+            game: currentGame.id,
+            playerid: currentGame.clients.length,
+            gametime: gameTime(currentGame)
+        });
     }
+}
+
+function gameTime(game) {
+    return Date.now()-game.timeDelta;
 }
