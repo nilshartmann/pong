@@ -143,7 +143,7 @@ var pong = pong || {};
 	_extends(PlayerWall, Brick);
 
 	PlayerWall.prototype.points = function() {
-		this.points--;
+		return this.points();
 	};
 
 	PlayerWall.prototype.draw = function() {
@@ -217,7 +217,16 @@ var pong = pong || {};
 		}
 
 		if (this.collidesWith(this.ball)) {
-			this.points--;
+
+			if (!this.inWall) {
+				this.points--;
+			}
+
+			this.inWall = true;
+
+
+		} else {
+			this.inWall = false;
 		}
 
 		var c = io.control();
