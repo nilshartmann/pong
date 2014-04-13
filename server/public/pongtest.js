@@ -12,38 +12,32 @@ var gameServer2 = io.connect('http://localhost:3000');
 /**
  * Configuration object.
  */
-var gameCfg1 = createGameConfig();
-var clientCfg1 = createClientConfig();
-var callbackFunctions1 = callbackFunctions(gameCfg1,clientCfg1);
+var clientCfg1 = createClientConfig(gameServer1);
+var clientCfg2 = createClientConfig(gameServer2);
 
-var gameCfg2 = createGameConfig();
-var clientCfg2 = createClientConfig();
-var callbackFunctions2 = callbackFunctions(gameCfg2,clientCfg2);
+registerCallbacks(clientCfg1);
+registerCallbacks(clientCfg2);
 
+createGame(clientCfg1, function () {
+    clientCfg2.game.gameId = clientCfg1.game.gameId;
+    ping(clientCfg2);
+    ping(clientCfg2);
+    ping(clientCfg2, function (latency) {
+        joinGame(clientCfg2, function () {
+            clientCfg2.game.ball.x = 1;
+            clientCfg2.game.ball.y = 1;
 
-registerCallbacks(gameServer1, gameCfg1, callbackFunctions1);
-registerCallbacks(gameServer2, gameCfg2, callbackFunctions2);
+            ballUpdate(clientCfg2);
 
-createGame(gameServer1,gameCfg1, callbackFunctions1, function () {
-    gameCfg2.gameId = gameCfg1.gameId;
-    ping(gameServer2,clientCfg2);
-    ping(gameServer2,clientCfg2);
-    ping(gameServer2,clientCfg2, function (latency) {
-        joinGame(gameServer2,gameCfg2, callbackFunctions2, function () {
-            gameCfg2.ball.x = 1;
-            gameCfg2.ball.y = 1;
+            clientCfg1.game.players[0].paddle.pos=10;
+            clientCfg2.game.players[1].paddle.pos=20;
+            paddleUpdate(clientCfg1);
+            paddleUpdate(clientCfg1);
 
-            ballUpdate(gameServer2,gameCfg2);
+            clientCfg1.game.ball.x = 2;
+            clientCfg1.game.ball.y = 2;
 
-            gameCfg1.players[0].paddle.pos=10;
-            gameCfg2.players[1].paddle.pos=20;
-            paddleUpdate(gameServer2,gameCfg2);
-            paddleUpdate(gameServer1,gameCfg1);
-
-            gameCfg1.ball.x = 2;
-            gameCfg1.ball.y = 2;
-
-            ballUpdate(gameServer1,gameCfg1);
+            ballUpdate(clientCfg1);
         });
     });
 
