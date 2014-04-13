@@ -25,18 +25,26 @@ var setConfig = function (config, data) {
     config.gameId = data.gameId;
     config.playerId = data.playerId;
     config.gameTime = data.gameTime;
+    config.players=data.game.players;
 };
 
-var callbackFunctions = function (gameCfg) {
+function callbackFunctions(gameCfg) {
     return {
         ackCreateGame: function (data) {
             console.log(data);
-            setConfig(gameCfg, data);
+            gameCfg.gameId = data.gameId;
+            gameCfg.playerId = data.playerId;
+            gameCfg.gameTime = data.gameTime;
             console.log(gameCfg);
         },
         ackJoinGame: function (data) {
             console.log(data);
-            gameCfg = data.game;
+            gameCfg.gameId = data.game.gameId;
+            gameCfg.playerId = data.playerId;
+            gameCfg.gameTime = data.gameTime;
+            gameCfg.players=data.game.players;
+            gameCfg.ball = data.game.ball;
+
             // TODO gametime
         },
         ballUpdate: function (data) {
@@ -68,7 +76,7 @@ var registerCallbacks = function (gameServer, gameCfg, cb) {
     gameServer.on("playerJoined", cb.playerJoined)
 }
 
-var createGame = function (config, cb, cb2) {
+var createGame = function (gameServer,config, cb, cb2) {
     config.gameTime = Date.now();
     config.players.push(createPlayer());
     config.players[0].playerId = 0;
@@ -76,14 +84,14 @@ var createGame = function (config, cb, cb2) {
         pos: 0,
         gameTime: config.gameTime
     };
-    gameServer2.emit("createGame", {"gameTime": config.gameTime, paddle: config.players[0].paddle}, function (data) {
+    gameServer.emit("createGame", {"gameTime": config.gameTime, paddle: config.players[0].paddle}, function (data) {
         cb.ackCreateGame(data);
         cb2();
     });
 };
 
-var joinGame = function (config, cb, cb2) {
-    gameServer2.emit("joinGame", {
+var joinGame = function (gameServer,config, cb, cb2) {
+    gameServer.emit("joinGame", {
         gameId: config.gameId,
         paddle: {
             pos: 0,
@@ -99,9 +107,9 @@ var joinGame = function (config, cb, cb2) {
  *
  * @param clientCfg
  */
-var ping = function (clientCfg, cb) {
+var ping = function (gameServer,clientCfg, cb) {
     clientCfg.myTime = Date.now();
-    gameServer2.emit("ping", Date.now(), function (clientTime, gameTime) {
+    gameServer.emit("ping", Date.now(), function (clientTime, gameTime) {
         console.log("pong");
         var currentLatenz = Date.now() - clientTime;
         console.log("Current-Latenz: " + currentLatenz);
@@ -118,16 +126,16 @@ var ping = function (clientCfg, cb) {
     })
 };
 
-var ballUpdate = function (config) {
-    gameServer2.emit("ballUpdate", {
+var ballUpdate = function (gameServer,config) {
+    gameServer.emit("ballUpdate", {
         ball: config.ball,
         "gameId": config.gameId,
         "playerId": config.playerId
     });
 };
 
-var paddleUpdate = function (config) {
-    gameServer2.emit("paddleUpdate", {
+var paddleUpdate = function (gameServer,config) {
+    gameServer.emit("paddleUpdate", {
         gameId: config.gameId,
         player: config.players[config.playerId]
     });
@@ -136,18 +144,18 @@ var paddleUpdate = function (config) {
 registerCallbacks(gameServer1, gameCfg1, callbackFunctions1);
 registerCallbacks(gameServer2, gameCfg2, callbackFunctions2);
 
-createGame(gameCfg1, callbackFunctions1, function () {
+createGame(gameServer1,gameCfg1, callbackFunctions1, function () {
     gameCfg2.gameId = gameCfg1.gameId;
-    ping(clientCfg2);
-    ping(clientCfg2);
-    ping(clientCfg2, function (latency) {
-        joinGame(gameCfg2, callbackFunctions1, function () {
+    ping(gameServer2,clientCfg2);
+    ping(gameServer2,clientCfg2);
+    ping(gameServer2,clientCfg2, function (latency) {
+        joinGame(gameServer2,gameCfg2, callbackFunctions2, function () {
             gameCfg2.ball.x = 1;
             gameCfg2.ball.y = 1;
 
-            ballUpdate(gameCfg2);
+            ballUpdate(gameServer2,gameCfg2);
 
-            paddleUpdate(gameCfg2);
+            paddleUpdate(gameServer2,gameCfg2);
         });
     });
 

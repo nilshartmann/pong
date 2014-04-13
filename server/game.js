@@ -32,6 +32,7 @@ function calcGameTime(game) {
 }
 
 function createGame(clientSocket,data,createGameCallback) {
+    console.log("Create game entry: " + util.inspect(data));
     var player = {
         playerId: 0,
         paddle: data.paddle
@@ -51,10 +52,10 @@ function createGame(clientSocket,data,createGameCallback) {
 
     serverGames.push(servergame);
     createGameCallback({
-        gameId: game.gameid,
+        gameId: game.gameId,
         playerId: 0
     });
-    console.log("Create game: " + util.inspect(game));
+    console.log("Create game exit: " + util.inspect(game));
 }
 
 function joinGame(clientSocket,data,joinGameCallback) {
