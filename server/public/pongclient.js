@@ -90,7 +90,7 @@ var ping = function (clientCfg) {
         } else {
             clientCfg.latency = currentLatenz;
         }
-        console.log("Client Config " + config);
+        console.log("Client Config " + clientCfg);
     })
 };
 
