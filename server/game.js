@@ -10,8 +10,8 @@ var serverGames = [];
 
 
 exports.onConnection= function (clientSocket) {
-    clientSocket.on('ping', function (pongFunction) {
-        pongFunction()
+    clientSocket.on('ping', clientTime, function (pongFunction) {
+        pongFunction(clientTime)
     });
     clientSocket.on('createGame', function (data) {
         createGame(clientSocket,data);
