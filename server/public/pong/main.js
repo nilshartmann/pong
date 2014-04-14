@@ -14,12 +14,25 @@ function setupGame(clientConfig) {
 		pongGame.addObject(b);
 	}
 
+	// Ball erzeugen
 	var movingBall = new pong.MovingBall(100,100);
-	var playerLeft = new pong.PlayerWall(true, pongGame, movingBall, 0, 20, 20, io.canvas.height-20, 'blue');
-	var playerRight = new pong.PlayerWall(false, pongGame, movingBall, io.canvas.width-20, 20, 20, io.canvas.height-20, 'gray');
 
+	// Wenn ich Master bin, stehe ich links und aktualisiere die Rechte Seite über die Updates
+	var master = clientConfig.game.playerId === 0;
+	if (master) {
+		console.log("ERZEUGE MASTER SPIELER");
+	} else {
+		console.log("ERZEUGE MITSPIELER");
+	}
+
+
+	var playerLeft = new pong.PlayerWall(!master, pongGame, movingBall, 0, 20, 20, io.canvas.height-20, 'blue');
+	var playerRight = new pong.PlayerWall(master, pongGame, movingBall, io.canvas.width-20, 20, 20, io.canvas.height-20, 'gray');
+
+	/*
 	playerLeft.setOtherPlayer(playerRight);
 	playerRight.setOtherPlayer(playerLeft);
+	*/
 
 //var playerWallLeft = new pong.PlayerWall(0,20,20, io.canvas.height-20)
 
