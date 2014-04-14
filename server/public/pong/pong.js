@@ -96,7 +96,7 @@ var pong = pong || {};
 	_mixin(MovingBall, MovingObject);
 
 	MovingBall.prototype.update = function (deltaT) {
-		this.inertiaMove(deltaT);
+		//this.inertiaMove(deltaT);
 	};
 
 	MovingBall.prototype.bounceOnEdges = function () {
@@ -126,10 +126,9 @@ var pong = pong || {};
 (function (_extends, _mixins, context, canvas, MovingObject, Brick) {
 	"use strict";
 
-	function PlayerWall(left, pongGame, ball, x, y, w, h, color, simulate) {
+	function PlayerWall(left, pongGame, ball, x, y, w, h, color) {
 		Brick.call(this, x, y, w, h, 'white');
 		this.stepSize = 5;
-		this.simulate = simulate;
 		this.points = 10;
 		this.pongGame = pongGame;
 		this.ball = ball;
@@ -137,27 +136,16 @@ var pong = pong || {};
 
 		this.paddle = new Brick(x, (io.canvas.height - 20) / 2, 20, 80, color);
 
-		if (this.simulate) {
-			this.direction = 'down';
-		}
-
-		var that = this;
-		var thisPongGame = this.pongGame;
-		console.log("thisponggame:");
-		console.dir(thisPongGame);
-		this.playerId = this.pongGame.clientConfig.game.playerId;
-		this.master = this.playerId === 0;
+		var me = this;
+		this.master = this.pongGame.clientConfig.game.playerId === 0;
 
 		this.pongGame.clientConfig.callbacks.onPaddleUpdate = function() {
-			console.log("ON PADDLE UPDATE ");
-			console.dir( thisPongGame.clientConfig);
-
-			thisPongGame.clientConfig.game.players.forEach(function(p) {
-				if (p.playerId !== that.playerId) {
+			me.pongGame.clientConfig.game.players.forEach(function(p) {
+				if (p.playerId !== me.pongGame.clientConfig.game.playerId) {
 					var newPaddlePos = p.paddle.pos;
 
-					console.log("newPaddlePos: " + newPaddlePos);
-					that.otherPlayer.paddle.config.position.y = newPaddlePos;
+					console.log((left ? "LINKS" : "RECHTS") + " newPaddlePos: " + newPaddlePos);
+					me.otherPlayer.paddle.config.position.y = newPaddlePos;
 				}
 			});
 		};
@@ -233,7 +221,7 @@ var pong = pong || {};
 	PlayerWall.prototype.update = function () {
 
 		var doIt =  (this.master && this.left || !this.master && !this.left);
-
+//		console.log((this.left?"LINKS":"RECHTS") + " update: " + doIt);
 
 
 		var pos = this.paddle.config.position;
@@ -276,9 +264,12 @@ var pong = pong || {};
 				pos.y = canvas.height - 100;
 			}
 
+			// WORKAROUND (Bewegen nur, wenn Taste gedrückt ist)
+			this.direction = null;
+
 			if (oldY !== pos.y) {
-				console.log("PADDLE UPDATE !!! " + oldY + " -> " + pos.y);
-				this.pongGame.clientConfig.game.players[this.playerId].paddle.pos = pos.y;
+				console.log((this.left?"LINKS":"RECHT") + " NEUE PADDLE POSITION: " + oldY + " -> " + pos.y);
+				this.pongGame.clientConfig.game.players[this.pongGame.clientConfig.game.playerId].paddle.pos = pos.y;
 				paddleUpdate(this.pongGame.clientConfig)
 			}
 		}

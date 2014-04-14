@@ -69,8 +69,7 @@ function createCallbackFunctions(clientCfg) {
             console.log(ball);
         },
         paddleUpdate: function (data) {
-            console.log("paddleUpdate");
-            console.log(data);
+            console.log("paddleUpdate received:" + data.player.paddle.pos);
             clientCfg.game.players[data.player.playerId].paddle = data.player.paddle;
 			if (clientCfg.callbacks.onPaddleUpdate) {
 				clientCfg.callbacks.onPaddleUpdate();

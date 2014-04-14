@@ -116,6 +116,7 @@ function paddleUpdate(data) {
         serverGame.game.players[data.player.playerId].paddle=data.player.paddle;
         for(var clientId=0;clientId<serverGame.clients.length;clientId++) {
             if(clientId!=playerId) {
+				console.log("NEW PADDLE POS: " + util.inspect(data));
                 serverGame.clients[clientId].emit("paddleUpdate",data);
             }
         }
