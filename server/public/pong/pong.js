@@ -263,11 +263,8 @@ var pong = pong || {};
 				pos.y = canvas.height - 100;
 			}
 
-			// WORKAROUND (Bewegen nur, wenn Taste gedrückt ist)
-			this.direction = null;
-
 			if (oldY !== pos.y) {
-				console.log((this.left ? "LINKS" : "RECHT") + " NEUE PADDLE POSITION: " + oldY + " -> " + pos.y);
+				console.log("VERSENDE NEUE PADDLE POSITION: " + oldY + " -> " + pos.y);
 				this.pongGame.clientConfig.game.players[this.pongGame.clientConfig.game.playerId].paddle.pos = pos.y;
 				paddleUpdate(this.pongGame.clientConfig)
 			}
