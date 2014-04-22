@@ -26,6 +26,7 @@ var createClientConfig = function(gameServer) {
     }
 
     config.callbacks=createCallbackFunctions(config);
+    registerCallbacks(config);
     return config;
 }
 
@@ -57,15 +58,13 @@ function createCallbackFunctions(clientCfg) {
             clientCfg.game.gameTime = data.gameTime;
             clientCfg.game.players=data.game.players;
             clientCfg.game.ball = data.game.ball;
-            clientCfg.timeDelta=Date.now()-clientCfg.game.gameTime+clientCfg.latency;
-            // TODO gametime
+            clientCfg.timeDelta=Date.now()-(clientCfg.game.gameTime+clientCfg.latency);
+            console.log("TimeDelta: " +clientCfg.timeDelta);
         },
         ballUpdate: function (data) {
             console.log("ballUpdate");
             console.log(data);
-            console.log("TODO");
             ball = data.ball;
-            console.log("TODO gametime?");
             console.log(ball);
         },
         paddleUpdate: function (data) {
@@ -82,10 +81,8 @@ function createCallbackFunctions(clientCfg) {
             console.log(data);
             clientCfg.game.players=data.game.players;
             clientCfg.game.ball = data.game.ball;
-            // TODO gametime
             data.game.playerId=clientCfg.game.playerId;
             clientCfg.game = data.game;
-
         }
     }
  return callbacks;
@@ -98,29 +95,39 @@ var registerCallbacks = function (clientCfg) {
 }
 
 var createGame = function (clientCfg, cb2) {
-    clientCfg.game.gameTime = Date.now();
-    clientCfg.game.players.push(createPlayer());
-    clientCfg.game.players[0].playerId = 0;
-    clientCfg.game.players[0].paddle = {
-        pos: 0,
-        gameTime: clientCfg.gameTime
-    };
-    clientCfg.gameServer.emit("createGame", {"gameTime": clientCfg.game.gameTime, paddle: clientCfg.game.players[0].paddle, ball: clientCfg.game.ball}, function (data) {
-        clientCfg.callbacks.ackCreateGame(data);
-        cb2();
+    for(var i=0;i<5;i++) {
+        ping(clientCfg);
+    }
+    ping(clientCfg, function(latency) {
+        clientCfg.game.gameTime = Date.now()+latency;
+        clientCfg.game.players.push(createPlayer());
+        clientCfg.game.players[0].playerId = 0;
+        clientCfg.game.players[0].paddle = {
+            pos: 0,
+            gameTime: clientCfg.game.gameTime
+        };
+        clientCfg.gameServer.emit("createGame", {"gameTime": clientCfg.game.gameTime, paddle: clientCfg.game.players[0].paddle, ball: clientCfg.game.ball}, function (data) {
+            clientCfg.callbacks.ackCreateGame(data);
+            cb2();
+        });
     });
 };
 
 var joinGame = function (clientCfg, cb2) {
-    clientCfg.gameServer.emit("joinGame", {
-        gameId: clientCfg.game.gameId,
-        paddle: {
-            pos: 0,
-            gameTime: undefined
-        }
-    }, function (data) {
-        clientCfg.callbacks.ackJoinGame(data);
-        cb2();
+    for(var i=0;i<5;i++) {
+        ping(clientCfg);
+    }
+    ping(clientCfg, function(latency) {
+        clientCfg.gameServer.emit("joinGame", {
+            gameId: clientCfg.game.gameId,
+            paddle: {
+                pos: 0,
+                gameTime: undefined
+            }
+        }, function (data) {
+            clientCfg.callbacks.ackJoinGame(data);
+            cb2();
+        });
     });
 };
 
@@ -129,10 +136,9 @@ var joinGame = function (clientCfg, cb2) {
  * @param clientCfg
  */
 var ping = function (clientCfg, cb) {
-    clientCfg.myTime = Date.now();
-    clientCfg.gameServer.emit("ping", Date.now(), function (clientTime, gameTime) {
+    clientCfg.gameServer.emit("ping", Date.now(), function (clientTime) {
         console.log("pong");
-        var currentLatenz = Date.now() - clientTime;
+        var currentLatenz = (Date.now() - clientTime) / 2;
         console.log("Current-Latenz: " + currentLatenz);
         if (clientCfg.latency) {
             clientCfg.latency = ( clientCfg.latency + currentLatenz ) / 2;
@@ -158,7 +164,6 @@ var ballUpdate = function (clientCfg) {
 
 var paddleUpdate = function (clientCfg) {
     clientCfg.game.players[clientCfg.game.playerId].paddle.gameTime=Date.now()-clientCfg.timeDelta;
-    clientCfg.game.ball.gameTime=Date.now()-clientCfg.timeDelta;
     clientCfg.gameServer.emit("paddleUpdate", {
         gameId: clientCfg.game.gameId,
         player: clientCfg.game.players[clientCfg.game.playerId]

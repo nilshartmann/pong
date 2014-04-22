@@ -55,7 +55,7 @@ function createGame(clientSocket,data,createGameCallback) {
         gameId: game.gameId,
         playerId: 0
     });
-    console.log("Create game exit: " + util.inspect(game));
+    console.log("Create game exit: " + util.inspect(game) + " " + servergame.timeDelta);
 }
 
 function joinGame(clientSocket,data,joinGameCallback) {

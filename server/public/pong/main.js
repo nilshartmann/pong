@@ -58,7 +58,6 @@ function newGame() {
 	console.log("new Game...");
 	var gameServer = io.connect('http://localhost:3000');
 	var clientCfg = createClientConfig(gameServer);
-	registerCallbacks(clientCfg);
 
 	createGame(clientCfg, function() {
 		document.getElementById("game").style.visibility="visible";
@@ -73,7 +72,6 @@ function joinExistingGame() {
 	console.log("gameId: " + gameId);
 	var gameServer = io.connect('http://localhost:3000');
 	var clientCfg = createClientConfig(gameServer);
-	registerCallbacks(clientCfg);
 	clientCfg.game.gameId = gameId;
 
 	joinGame(clientCfg, function() {
