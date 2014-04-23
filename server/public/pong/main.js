@@ -14,8 +14,6 @@ function setupGame(clientConfig) {
 		pongGame.addObject(b);
 	}
 
-	// Ball erzeugen
-	var movingBall = new pong.MovingBall(100,100);
 
 	// Wenn ich Master bin, stehe ich links und aktualisiere die Rechte Seite über die Updates
 	var master = clientConfig.game.playerId === 0;
@@ -24,6 +22,9 @@ function setupGame(clientConfig) {
 	} else {
 		console.log("ERZEUGE MITSPIELER");
 	}
+
+    // Ball erzeugen
+    var movingBall = new pong.MovingBall(master,pongGame,100,100);
 
 
 	var playerLeft = new pong.PlayerWall(!master, pongGame, movingBall, 0, 20, 20, io.canvas.height-20, 'blue');

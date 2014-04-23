@@ -65,7 +65,9 @@ var pong = pong || {};
 (function (_extends, _mixin, canvas, GameObject, MovingObject, Ball) {
 	"use strict";
 
-	function MovingBall(x, y) {
+	function MovingBall(master,pongGame, x, y) {
+        this.master=master;
+        this.pongGame=pongGame;
 		this.velocity = {
 			x: 10,
 			y: 100
@@ -90,30 +92,53 @@ var pong = pong || {};
 
 		this.x = config.position.x;
 		this.y = config.position.y;
+        var me=this;
+
+        this.pongGame.clientConfig.callbacks.onBallUpdate = function () {
+            me.position.x=me.pongGame.clientConfig.game.ball.x;
+            me.position.y=me.pongGame.clientConfig.game.ball.y;
+            me.velocity.x=me.pongGame.clientConfig.game.ball.dx;
+            me.velocity.y=me.pongGame.clientConfig.game.ball.dy;
+            var deltaT=getGametime(me.pongGame.clientConfig)-me.pongGame.clientConfig.game.ball.gameTime;
+            me.inertiaMove(deltaT);
+        };
 	}
 
 	_extends(MovingBall, Ball);
 	_mixin(MovingBall, MovingObject);
 
 	MovingBall.prototype.update = function (deltaT) {
-		//this.inertiaMove(deltaT);
+		this.inertiaMove(deltaT);
 	};
 
 	MovingBall.prototype.bounceOnEdges = function () {
+        var changed=false;
 		if (this.position.x < this.r) {
 			this.position.x = io.canvas.width - this.r;
+            changed=true;
 		}
 		if (this.position.x > io.canvas.width - this.r) {
 			this.position.x = this.r;
+            changed=true;
 		}
 		if (this.position.y < this.r + 20) {
 			this.position.y = 20 + this.r;
 			this.velocity.y = -this.velocity.y;
+            changed=true;
 		}
 		if (this.position.y >= io.canvas.height - this.r - 20) {
 			this.position.y = io.canvas.height - this.r - 20;
 			this.velocity.y = -this.velocity.y;
+            changed=true;
 		}
+
+        if(this.master && changed) {
+            this.pongGame.clientConfig.game.ball.x=this.position.x;
+            this.pongGame.clientConfig.game.ball.y=this.position.y;
+            this.pongGame.clientConfig.game.ball.dx=this.velocity.x;
+            this.pongGame.clientConfig.game.ball.dy=this.velocity.y;
+            ballUpdate(this.pongGame.clientConfig);
+        }
 	};
 
 	pong.MovingBall = MovingBall;

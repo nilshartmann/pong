@@ -63,9 +63,12 @@ function createCallbackFunctions(clientCfg) {
         },
         ballUpdate: function (data) {
             console.log("ballUpdate");
-            console.log(data);
-            ball = data.ball;
-            console.log(ball);
+            clientCfg.game.ball = data.ball;
+            console.log(clientCfg.game.ball);
+
+            if (clientCfg.callbacks.onBallUpdate) {
+                clientCfg.callbacks.onBallUpdate();
+            }
         },
         paddleUpdate: function (data) {
             console.log("paddleUpdate received:" + data.player.paddle.pos);
@@ -154,7 +157,7 @@ var ping = function (clientCfg, cb) {
 };
 
 var ballUpdate = function (clientCfg) {
-    clientCfg.game.ball.gameTime=Date.now()-clientCfg.timeDelta;
+    clientCfg.game.ball.gameTime=getGametime(clientCfg);
     clientCfg.gameServer.emit("ballUpdate", {
         ball: clientCfg.game.ball,
         "gameId": clientCfg.game.gameId,
@@ -163,10 +166,14 @@ var ballUpdate = function (clientCfg) {
 };
 
 var paddleUpdate = function (clientCfg) {
-    clientCfg.game.players[clientCfg.game.playerId].paddle.gameTime=Date.now()-clientCfg.timeDelta;
+    clientCfg.game.players[clientCfg.game.playerId].paddle.gameTime=getGametime(clientCfg);
     clientCfg.gameServer.emit("paddleUpdate", {
         gameId: clientCfg.game.gameId,
         player: clientCfg.game.players[clientCfg.game.playerId]
     });
+};
+
+var getGametime = function(clientCfg) {
+    return Date.now()-clientCfg.timeDelta;
 };
 
