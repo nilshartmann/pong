@@ -27,8 +27,8 @@ function setupGame(clientConfig) {
     var movingBall = new pong.MovingBall(master,pongGame,100,100);
 
 
-	var playerLeft = new pong.PlayerWall(!master, pongGame, movingBall, 0, 20, 20, io.canvas.height-20, 'blue');
-	var playerRight = new pong.PlayerWall(master, pongGame, movingBall, io.canvas.width-20, 20, 20, io.canvas.height-20, 'gray');
+	var playerLeft = new pong.PlayerWall(0, pongGame, movingBall, 0, 20, 20, io.canvas.height-20, 'blue');
+	var playerRight = new pong.PlayerWall(1, pongGame, movingBall, io.canvas.width-20, 20, 20, io.canvas.height-20, 'gray');
 
 	/*
 	playerLeft.setOtherPlayer(playerRight);

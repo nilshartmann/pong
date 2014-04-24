@@ -151,42 +151,33 @@ var pong = pong || {};
 (function (_extends, _mixins, context, canvas, MovingObject, Brick) {
 	"use strict";
 
-	function PlayerWall(remotePlayer, pongGame, ball, x, y, w, h, color) {
+	function PlayerWall(playerId, pongGame, ball, x, y, w, h, color) {
 		Brick.call(this, x, y, w, h, 'white');
 		this.stepSize = 5;
 		this.points = 10;
 		this.pongGame = pongGame;
 		this.ball = ball;
-		this.remotePlayer = remotePlayer;
+		this.playerId = playerId; //lokale PlayyerId
 
 		this.paddle = new Brick(x, (io.canvas.height - 20) / 2, 20, 80, color);
 
 		var me = this;
-		this.master = this.pongGame.clientConfig.game.playerId === 0;
+        this.pongGame.clientConfig.callbacks.onPaddleUpdate = function () {
+            me.pongGame.clientConfig.game.players.forEach(function (p) {
+                if (p.playerId === me.playerId) {
+                    var newPaddlePos = p.paddle.pos;
 
-		if (this.remotePlayer) {
-			this.pongGame.clientConfig.callbacks.onPaddleUpdate = function () {
-				me.pongGame.clientConfig.game.players.forEach(function (p) {
-					if (p.playerId !== me.pongGame.clientConfig.game.playerId) {
-						var newPaddlePos = p.paddle.pos;
-
-						// sollte immer remote sein
-						console.log((me.remotePlayer ? "REMOTE" : "ICH") + " newPaddlePos: " + newPaddlePos);
-						me.paddle.config.position.y = newPaddlePos;
-					}
-				});
-			};
-		}
+                    console.log("newPaddlePos: " + newPaddlePos);
+                    me.paddle.config.position.y = newPaddlePos;
+                }
+            });
+        };
 	}
 
 	_extends(PlayerWall, Brick);
 
 	PlayerWall.prototype.points = function () {
 		return this.points();
-	};
-
-	PlayerWall.prototype.setOtherPlayer = function (player) {
-		this.otherPlayer = player;
 	};
 
 
@@ -206,44 +197,44 @@ var pong = pong || {};
 
 		var ball = this.ball;
 		var pos = this.paddle.config.position;
-
-		var oldX = ball.position.x,
-			oldY = ball.position.y,
-			oldVelocityX = ball.velocity.x,
-			oldVelocityY = ball.velocity.y;
+        var changed=false;
 
 		if (ball.velocity.x < 0 && ball.position.x - ball.r < pos.x + this.paddle.width) {
 			ball.velocity.x = -ball.velocity.x;
 			ball.position.x = pos.x + this.paddle.width + ball.r;
+            changed=true;
 		}
 
 		if (ball.velocity.x > 0 && ball.position.x + ball.r > pos.x) {
 			ball.position.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
-
+            changed=true;
 			// return;   ??????????????????????????????????????
 		}
 
 		if (ball.x + ball.r >= pos.x) {
 			ball.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
+            changed=true;
 		}
 		if (pos.y < ball.r) {
 			ball.y = ball.r;
 			ball.velocity.y = -ball.velocity.y;
+            changed=true;
 		}
 		if (pos.y >= io.canvas.height - ball.r - 20) {
 			ball.y = io.canvas.height - ball.r - 20;
 			ball.velocity.y = -ball.velocity.y;
+            changed=true;
 		}
 
-		/*
-		 this.pongGame.clientConfig.game.ball.x = ball.x;
-		 this.pongGame.clientConfig.game.ball.y = ball.y;
-		 this.pongGame.clientConfig.game.ball.dx = ball.velocity.x;
-		 this.pongGame.clientConfig.game.ball.dy = ball.velocity.y;
-		 */
-		// this.pongGame.clientConfig.ballUpdate(this.pongGame.clientConfig);
+        if(this.playerId===this.pongGame.clientConfig.game.playerId && changed) {
+            this.pongGame.clientConfig.game.ball.x=ball.position.x;
+            this.pongGame.clientConfig.game.ball.y=ball.position.y;
+            this.pongGame.clientConfig.game.ball.dx=ball.velocity.x;
+            this.pongGame.clientConfig.game.ball.dy=ball.velocity.y;
+            ballUpdate(this.pongGame.clientConfig);
+        }
 	};
 
 	PlayerWall.prototype.update = function () {
@@ -265,7 +256,7 @@ var pong = pong || {};
 		}
 
 
-		if (!this.remotePlayer) {
+		if (this.playerId===this.pongGame.clientConfig.game.playerId) {
 			var c = io.control();
 			if (c.up) {
 				this.direction = 'up';
