@@ -8,18 +8,26 @@ var pong = pong || {};
 // ------------------------------------------------------------------------------------------------------
 (function (_extends, SimpleLogic, GameObject, context) {
 
-	function Brick(x, y, w, h, color) {
-		var config = {
-			position: {
-				x: x,
-				y: y
-			},
-			width: w,
-			height: h,
-			color: color || 'black'
-		};
+	function Brick(config) {
 		GameObject.call(this, config);
 	}
+
+    function Brick(xOrConfig, y, w, h, color) {
+        if(arguments.length>1) {
+            var config = {
+                position: {
+                    x: xOrConfig,
+                    y: y
+                },
+                width: w,
+                height: h,
+                color: color || 'black'
+            };
+            GameObject.call(this, config);
+        } else {
+            GameObject.call(this, xOrConfig);
+        }
+    }
 
 	_extends(Brick, GameObject);
 
@@ -66,34 +74,30 @@ var pong = pong || {};
 	"use strict";
 
 	function MovingBall(master,pongGame, x, y) {
+        var config =         {
+            r: 10,
+            color: 'red',
+            velocity: {
+                x: 10,
+                y: 100
+            },
+            maxSpeed: 2,
+            position: {
+                x: x,
+                y: y
+            },
+            gravity: 0.00,
+            acceleration: 0.1,
+            friction: 0
+        };
+
+        MovingObject.call(this, config);
+        Ball.call(this, config);
+
         this.master=master;
         this.pongGame=pongGame;
-		this.velocity = {
-			x: 10,
-			y: 100
-		};
-		this.maxSpeed = 2;
-		this.gravity = 0;
-		this.acceleration = 0.1;
-		this.friction = 0;
 
-		var config = {
-			position: {
-				x: x,
-				y: y
-			},
-			r: 10,
-			color: 'red'
-		};
-
-
-		GameObject.call(this, config);
-		Ball.call(this, config);
-
-		this.x = config.position.x;
-		this.y = config.position.y;
         var me=this;
-
         this.pongGame.clientConfig.callbacks.onBallUpdate = function () {
             me.position.x=me.pongGame.clientConfig.game.ball.x;
             me.position.y=me.pongGame.clientConfig.game.ball.y;
@@ -152,14 +156,34 @@ var pong = pong || {};
 	"use strict";
 
 	function PlayerWall(playerId, pongGame, ball, x, y, w, h, color) {
-		Brick.call(this, x, y, w, h, 'white');
+        var config = {
+            position: {
+                x: x,
+                y: y
+            },
+            width: w,
+            height: h,
+            color: 'white'
+        };
+		Brick.call(this, config);
 		this.stepSize = 5;
 		this.points = 10;
 		this.pongGame = pongGame;
 		this.ball = ball;
 		this.playerId = playerId; //lokale PlayyerId
 
-		this.paddle = new Brick(x, (io.canvas.height - 20) / 2, 20, 80, color);
+        var paddleConfig = {
+            position: {
+                x: x,
+                y: (io.canvas.height - 20) /2
+            },
+            width: 20,
+            height: 80,
+            color: color
+        };
+
+
+        this.paddle = new Brick(paddleConfig);
 
 		var me = this;
         this.pongGame.clientConfig.callbacks.onPaddleUpdate = function () {
