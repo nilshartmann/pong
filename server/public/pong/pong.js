@@ -78,8 +78,8 @@ var pong = pong || {};
             r: 10,
             color: 'red',
             velocity: {
-                x: 10,
-                y: 100
+                x: 100,
+                y: 10
             },
             maxSpeed: 2,
             position: {
@@ -159,11 +159,11 @@ var pong = pong || {};
         var config = {
             position: {
                 x: x,
-                y: y
+                y: (io.canvas.height - 20) /2
             },
-            width: w,
-            height: h,
-            color: 'white'
+            width: 20,
+            height: 80,
+            color: color
         };
 		Brick.call(this, config);
 		this.stepSize = 5;
@@ -172,18 +172,18 @@ var pong = pong || {};
 		this.ball = ball;
 		this.playerId = playerId; //lokale PlayyerId
 
-        var paddleConfig = {
+
+        var pointConfig = {
             position: {
                 x: x,
-                y: (io.canvas.height - 20) /2
+                y: y
             },
-            width: 20,
-            height: 80,
-            color: color
+            width: w,
+            height: h,
+            color: 'white'
         };
 
-
-        this.paddle = new Brick(paddleConfig);
+        this.pointWall = new Brick(pointConfig);
 
 		var me = this;
         this.pongGame.clientConfig.callbacks.onPaddleUpdate = function () {
@@ -201,15 +201,12 @@ var pong = pong || {};
 	_extends(PlayerWall, Brick);
 
 	PlayerWall.prototype.points = function () {
-		return this.points();
+		return this.points;
 	};
 
 
 	PlayerWall.prototype.draw = function () {
-		//Brick.prototype.draw.call(this);
-		// Nur den "Paddle" zeichnen
-
-		this.paddle.draw();
+		Brick.prototype.draw.call(this);
 
 		io.context.fillStyle = 'black';
 		io.context.font = '12px sans-serif';
@@ -220,16 +217,14 @@ var pong = pong || {};
 	PlayerWall.prototype.bounceOnPaddleCollision = function () {
 
 		var ball = this.ball;
-		var pos = this.paddle.config.position;
+		var pos = this.config.position;
         var changed=false;
 
-		if (ball.velocity.x < 0 && ball.position.x - ball.r < pos.x + this.paddle.width) {
+		if (ball.velocity.x < 0 && ball.position.x - ball.r < pos.x + this.config.width) {
 			ball.velocity.x = -ball.velocity.x;
-			ball.position.x = pos.x + this.paddle.width + ball.r;
+			ball.position.x = pos.x + this.config.width + ball.r;
             changed=true;
-		}
-
-		if (ball.velocity.x > 0 && ball.position.x + ball.r > pos.x) {
+		}else if (ball.velocity.x > 0 && ball.position.x + ball.r > pos.x) {
 			ball.position.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
             changed=true;
@@ -240,8 +235,7 @@ var pong = pong || {};
 			ball.x = pos.x - ball.r;
 			ball.velocity.x = -ball.velocity.x;
             changed=true;
-		}
-		if (pos.y < ball.r) {
+		} else if (pos.y < ball.r) {
 			ball.y = ball.r;
 			ball.velocity.y = -ball.velocity.y;
             changed=true;
@@ -263,13 +257,12 @@ var pong = pong || {};
 
 	PlayerWall.prototype.update = function () {
 
-		var pos = this.paddle.config.position;
-		if (this.paddle.collidesWith(this.ball)) {
+		if (this.collidesWith(this.ball)) {
 			this.bounceOnPaddleCollision();
 			return;
 		}
 
-		if (this.collidesWith(this.ball)) {
+		if (this.pointWall.collidesWith(this.ball)) {
 			if (!this.inWall) {
 				this.points--;
 			}
@@ -288,7 +281,8 @@ var pong = pong || {};
 				this.direction = 'down';
 			}
 
-			var oldY = pos.y;
+            var pos = this.config.position;
+            var oldY = pos.y;
 
 			if ('down' === this.direction) {
 				pos.y = pos.y + this.stepSize;
