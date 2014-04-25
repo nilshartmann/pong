@@ -8,10 +8,6 @@ var pong = pong || {};
 // ------------------------------------------------------------------------------------------------------
 (function (_extends, SimpleLogic, GameObject, context) {
 
-	function Brick(config) {
-		GameObject.call(this, config);
-	}
-
     function Brick(xOrConfig, y, w, h, color) {
         if(arguments.length>1) {
             var config = {
@@ -97,6 +93,10 @@ var pong = pong || {};
         this.master=master;
         this.pongGame=pongGame;
 
+        if(this.master) {
+            this.sendBallUpdate();
+        }
+
         var me=this;
         this.pongGame.clientConfig.callbacks.onBallUpdate = function () {
             me.position.x=me.pongGame.clientConfig.game.ball.x;
@@ -137,13 +137,17 @@ var pong = pong || {};
 		}
 
         if(this.master && changed) {
-            this.pongGame.clientConfig.game.ball.x=this.position.x;
-            this.pongGame.clientConfig.game.ball.y=this.position.y;
-            this.pongGame.clientConfig.game.ball.dx=this.velocity.x;
-            this.pongGame.clientConfig.game.ball.dy=this.velocity.y;
-            ballUpdate(this.pongGame.clientConfig);
+            this.sendBallUpdate();
         }
 	};
+
+    MovingBall.prototype.sendBallUpdate = function() {
+        this.pongGame.clientConfig.game.ball.x=this.position.x;
+        this.pongGame.clientConfig.game.ball.y=this.position.y;
+        this.pongGame.clientConfig.game.ball.dx=this.velocity.x;
+        this.pongGame.clientConfig.game.ball.dy=this.velocity.y;
+        ballUpdate(this.pongGame.clientConfig);
+    };
 
 	pong.MovingBall = MovingBall;
 
@@ -177,13 +181,15 @@ var pong = pong || {};
         MovingObject.call(this, config);
 		Brick.call(this, config);
 
-		this.stepSize = 5;
 		this.points = 10;
 		this.pongGame = pongGame;
 		this.ball = ball;
 		this.playerId = playerId; //lokale PlayyerId
         this.localPaddle=(this.playerId===this.pongGame.clientConfig.game.playerId);
 
+        if(this.localPaddle) {
+            this.sendPaddleUpdate();
+        }
 
         var pointConfig = {
             position: {
@@ -329,13 +335,17 @@ var pong = pong || {};
 
 
 			if (changed) {
-				console.log("VERSENDE NEUE PADDLE POSITION: " + " -> " + pos.y);
-				this.pongGame.clientConfig.game.players[this.playerId].paddle.pos = pos.y;
-                this.pongGame.clientConfig.game.players[this.playerId].paddle.dy = velocity.y;
-				paddleUpdate(this.pongGame.clientConfig)
+                this.sendPaddleUpdate();
 			}
 		}
 	};
+
+    PlayerWall.prototype.sendPaddleUpdate = function () {
+        console.log("VERSENDE NEUE PADDLE POSITION: " + " -> " + this.config.position.y);
+        this.pongGame.clientConfig.game.players[this.playerId].paddle.pos = this.config.position.y;
+        this.pongGame.clientConfig.game.players[this.playerId].paddle.dy = this.config.velocity.y;
+        paddleUpdate(this.pongGame.clientConfig)
+    };
 
 
 	// Export PlayerWall
