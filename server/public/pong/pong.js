@@ -152,7 +152,7 @@ var pong = pong || {};
 // ------------------------------------------------------------------------------------------------------
 // ----- P L A Y E R W A L L
 // ------------------------------------------------------------------------------------------------------
-(function (_extends, _mixins, context, canvas, MovingObject, Brick) {
+(function (_extends, _mixin, context, canvas, MovingObject, Brick) {
 	"use strict";
 
 	function PlayerWall(playerId, pongGame, ball, x, y, w, h, color) {
@@ -161,16 +161,28 @@ var pong = pong || {};
                 x: x,
                 y: (io.canvas.height - 20) /2
             },
+            velocity: {
+                x: 0,
+                y: 0
+            },
+            maxSpeed: 2,
+            gravity: 0.00,
+            acceleration: 0.0,
+            friction: 0,
+
             width: 20,
             height: 80,
             color: color
         };
+        MovingObject.call(this, config);
 		Brick.call(this, config);
+
 		this.stepSize = 5;
 		this.points = 10;
 		this.pongGame = pongGame;
 		this.ball = ball;
 		this.playerId = playerId; //lokale PlayyerId
+        this.localPaddle=(this.playerId===this.pongGame.clientConfig.game.playerId);
 
 
         var pointConfig = {
@@ -184,26 +196,31 @@ var pong = pong || {};
         };
 
         this.pointWall = new Brick(pointConfig);
-
-		var me = this;
-        this.pongGame.clientConfig.callbacks.onPaddleUpdate = function () {
-            me.pongGame.clientConfig.game.players.forEach(function (p) {
-                if (p.playerId === me.playerId) {
-                    var newPaddlePos = p.paddle.pos;
-
-                    console.log("newPaddlePos: " + newPaddlePos);
-                    me.paddle.config.position.y = newPaddlePos;
-                }
-            });
-        };
 	}
 
 	_extends(PlayerWall, Brick);
+    _mixin(PlayerWall, MovingObject);
 
 	PlayerWall.prototype.points = function () {
 		return this.points;
 	};
 
+    PlayerWall.prototype.onPaddleUpdate = function () {
+        if(this.localPaddle)
+            return;
+        var me=this;
+        this.pongGame.clientConfig.game.players.forEach(function (p) {
+            if (p.playerId === me.playerId) {
+                var newPaddlePos = p.paddle.pos;
+                var newPaddleVel = p.paddle.dy;
+
+                console.log("newPaddlePos: " + newPaddlePos);
+                console.log("newPaddleVel: " + newPaddleVel);
+                me.config.position.y = newPaddlePos;
+                me.config.velocity.y = newPaddleVel;
+            }
+        });
+    };
 
 	PlayerWall.prototype.draw = function () {
 		Brick.prototype.draw.call(this);
@@ -246,7 +263,7 @@ var pong = pong || {};
             changed=true;
 		}
 
-        if(this.playerId===this.pongGame.clientConfig.game.playerId && changed) {
+        if(this.localPaddle && changed) {
             this.pongGame.clientConfig.game.ball.x=ball.position.x;
             this.pongGame.clientConfig.game.ball.y=ball.position.y;
             this.pongGame.clientConfig.game.ball.dx=ball.velocity.x;
@@ -255,7 +272,8 @@ var pong = pong || {};
         }
 	};
 
-	PlayerWall.prototype.update = function () {
+	PlayerWall.prototype.update = function (deltaT) {
+        this.inertiaMove(deltaT);
 
 		if (this.collidesWith(this.ball)) {
 			this.bounceOnPaddleCollision();
@@ -273,33 +291,47 @@ var pong = pong || {};
 		}
 
 
-		if (this.playerId===this.pongGame.clientConfig.game.playerId) {
+		if (this.localPaddle) {
 			var c = io.control();
+            var direction;
 			if (c.up) {
-				this.direction = 'up';
+				direction = 'up';
 			} else if (c.down) {
-				this.direction = 'down';
+				direction = 'down';
 			}
+
+            var changed=false;
 
             var pos = this.config.position;
-            var oldY = pos.y;
+            var velocity = this.config.velocity;
 
-			if ('down' === this.direction) {
-				pos.y = pos.y + this.stepSize;
-			} else if ('up' === this.direction) {
-				pos.y = pos.y - this.stepSize;
+            // 20 ist die Höhe des Rahmens oben und unten
+            if (pos.y < 20) {
+                pos.y = 20;
+                velocity.y=0;
+                changed=true;
+            } else if (pos.y > canvas.height - 100) {
+                pos.y = canvas.height - 100;
+                velocity.y=0;
+                changed=true;
+            } else if ('down' === direction) {
+                if(velocity.y!==2) {
+                    velocity.y=2;
+                    changed=true;
+                }
+			} else if ('up' === direction) {
+                if(velocity.y!==-2) {
+                    velocity.y = -2;
+                    changed=true;
+                }
 			}
 
-			// 20 ist die Höhe des Rahmens oben und unten
-			if (pos.y < 20) {
-				pos.y = 20;
-			} else if (pos.y > canvas.height - 100) {
-				pos.y = canvas.height - 100;
-			}
 
-			if (oldY !== pos.y) {
-				console.log("VERSENDE NEUE PADDLE POSITION: " + oldY + " -> " + pos.y);
-				this.pongGame.clientConfig.game.players[this.pongGame.clientConfig.game.playerId].paddle.pos = pos.y;
+
+			if (changed) {
+				console.log("VERSENDE NEUE PADDLE POSITION: " + " -> " + pos.y);
+				this.pongGame.clientConfig.game.players[this.playerId].paddle.pos = pos.y;
+                this.pongGame.clientConfig.game.players[this.playerId].paddle.dy = velocity.y;
 				paddleUpdate(this.pongGame.clientConfig)
 			}
 		}
