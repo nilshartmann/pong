@@ -169,7 +169,7 @@ var pong = pong || {};
                 x: 0,
                 y: 0
             },
-            maxSpeed: 2,
+            maxSpeed: 0.5,
             gravity: 0.00,
             acceleration: 0.0,
             friction: 0,
@@ -220,6 +220,7 @@ var pong = pong || {};
                 var newPaddlePos = p.paddle.pos;
                 var newPaddleVel = p.paddle.dy;
 
+                console.log("Player: " + me.playerId);
                 console.log("newPaddlePos: " + newPaddlePos);
                 console.log("newPaddleVel: " + newPaddleVel);
                 me.config.position.y = newPaddlePos;

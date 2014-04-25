@@ -110,12 +110,12 @@ function ballUpdate(data) {
 function paddleUpdate(data) {
     console.log("Paddle Update: " + util.inspect(data));
     var gameId=data.gameId;
-    var playerId=data.playerId;
+    var playerId=data.player.playerId;
     var serverGame=serverGames[gameId];
     if(serverGame) {
-        serverGame.game.players[data.player.playerId].paddle=data.player.paddle;
+        serverGame.game.players[playerId].paddle=data.player.paddle;
         for(var clientId=0;clientId<serverGame.clients.length;clientId++) {
-            if(clientId!=playerId) {
+            if(clientId!==playerId) {
 				console.log("NEW PADDLE POS: " + util.inspect(data));
                 serverGame.clients[clientId].emit("paddleUpdate",data);
             }
